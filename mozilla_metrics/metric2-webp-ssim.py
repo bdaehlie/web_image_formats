@@ -48,7 +48,6 @@ def main(argv):
   webp_ssim_values = []
   webp_file_sizes = []
 
-
   # Calculate SSIM and file size for all JPEG quality levels.
   for q in quality_values:
     ppm =     basename + str(q) + ".ppm"
@@ -128,15 +127,13 @@ def main(argv):
 
       i += 1
 
-  jpeg_total_size = 0
-  for fs in jpeg_file_sizes:
-    jpeg_total_size += fs
+  percent_improvement = 0
+  i = 0
+  while i < len(quality_values):
+    percent_improvement += webp_ssim_equiv_file_sizes[i] / jpeg_file_sizes[i]
+    i += 1
 
-  webp_total_size = 0
-  for fs in webp_ssim_equiv_file_sizes:
-    webp_total_size += fs
-
-  print "File size change from JPEG to WebP at equivalent SSIM: " + str(float(webp_total_size) / float(jpeg_total_size))[:5]
+  print "Average percentage improvement from JPEG to WebP at equiv SSIM: " + str(percent_improvement / len(quality_values))
 
 if __name__ == "__main__":
   main(sys.argv)
