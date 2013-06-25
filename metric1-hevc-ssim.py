@@ -15,9 +15,13 @@ import time
 ssim = "/Users/josh/src/image-formats/SSIM/ssim"
 cjpeg = "/opt/local/bin/cjpeg -optimize"
 djpeg = "/opt/local/bin/djpeg"
-cwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/cwebp"
-dwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/dwebp"
+chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
+dhevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin"
 convert = "/opt/local/bin/convert"
+png2y4m = "/Users/josh/src/image-formats/daala/tools/png2y4m"
+y4m2png = "/Users/josh/src/image-formats/daala/tools/y4m2png"
+ffmpeg = "/opt/local/bin/ffmpeg"
+hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_randomaccess_main.cfg"
 
 tmpdir = "/tmp/"
 
@@ -30,6 +34,34 @@ def ssim_float_for_images(img1_path, img2_path):
   g = float(proc.readline().strip().strip('%'))
   b = float(proc.readline().strip().strip('%'))
   return (((r + g + b) / 3) / 100)
+
+def get_png_width(png_path):
+  cmd = "identify -format \"%w\" %s" % (png_path)
+  proc = os.popen(cmd, "r")
+  return int(proc.readline().strip())
+
+def get_png_height(png_path):
+  cmd = "identify -format \"%h\" %s" % (png_path)
+  proc = os.popen(cmd, "r")
+  return int(proc.readline().strip())
+
+def ssim_for_png_to_hevc(png_path, quality):
+  y4m_path = png_path + ".y4m"
+  cmd = "%s %s -o %s" % (png2y4m, png_path, y4m_path)
+  os.system(cmd)
+  png_yuv_path = png_path + ".yuv"
+  cmd = "%s -y -i %s %s" % (ffmpeg, y4m_path, png_yuv_path)
+  os.system(cmd)
+  hevc_path = png_path + ".hevc"
+  hevc_yuv_path = hevc_path + ".yuv"
+  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, get_png_width(png_path), get_png_height(png_path), quality, yuv_path, hevc_path, hevc_yuv_path)
+  os.system(cmd)
+  hevc_y4m_path = hevc_path + ".y4m"
+  cmd = "%s -y -s %ix%i -i %s %s" % (ffmpeg, get_png_width(png_path), get_png_height(png_path), hevc_yuv_path, hevc_y4m_path)
+  os.system(cmd)
+  hevc_png_path = hevc_path + ".png"
+  cmd = "%s %s -o %s" % (y4m2png, hevc_y4m_path, hevc_png_path)
+  return ssim_float_for_images(png_path, hevc_png_path)
 
 def main(argv):
   png = argv[1]
@@ -45,8 +77,8 @@ def main(argv):
   jpeg_file_sizes = []
 
   # Each list will be 100 entries long, one for each quality option.
-  webp_ssim_values = []
-  webp_file_sizes = []
+  hevc_ssim_values = []
+  hevc_file_sizes = []
 
   # Calculate SSIM and file size for all JPEG quality levels.
   for q in quality_values:
@@ -72,12 +104,12 @@ def main(argv):
     os.remove(jpg_ppm)
     os.remove(jpg_png)
 
-  # Calculate SSIM and file size for all WebP quality levels.
+  # Calculate SSIM and file size for all hevc quality levels.
   i = 0
   while i < 100:
     q = i + 1
 
-    webp =     basename + str(q) + ".webp"
+    hevc =     basename + str(q) + ".webp"
     webp_png = basename + str(q) + "_webp.png"
 
     cmd = "%s -quiet -q %d %s -o %s" % (cwebp, q, png, webp)

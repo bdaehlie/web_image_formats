@@ -11,30 +11,11 @@
 import os
 import sys
 import time
-
-ssim = "/Users/josh/src/image-formats/SSIM/ssim"
-cjpeg = "/opt/local/bin/cjpeg -optimize"
-djpeg = "/opt/local/bin/djpeg"
-cwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/cwebp"
-dwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/dwebp"
-convert = "/opt/local/bin/convert"
-
-tmpdir = "/tmp/"
-
-# Return a single float value from the ssim program output.
-def ssim_float_for_images(img1_path, img2_path):
-  cmd = "%s %s %s" % (ssim, img1_path, img2_path)
-  proc = os.popen(cmd, "r")
-  proc.readline() # Throw out the first line of output
-  r = float(proc.readline().strip().strip('%'))
-  g = float(proc.readline().strip().strip('%'))
-  b = float(proc.readline().strip().strip('%'))
-  return (((r + g + b) / 3) / 100)
+import test_utils
 
 def main(argv):
   png = argv[1]
-  filename = os.path.basename(png)
-  basename = tmpdir + os.path.splitext(filename)[0]
+  tmp_file_base = test_utils.tmpdir + os.path.basename(png)
 
   # Quality values we're interested in. This is essentially an optimization
   # to avoid working on every one.
@@ -50,47 +31,27 @@ def main(argv):
 
   # Calculate SSIM and file size for all JPEG quality levels.
   for q in quality_values:
-    ppm =     basename + str(q) + ".ppm"
-    jpg =     basename + str(q) + ".jpg"
-    jpg_ppm = basename + str(q) + "_jpg.ppm"
-    jpg_png = basename + str(q) + "_jpg.png"
-
-    cmd = "%s %s %s" % (convert, png, ppm)
-    os.system(cmd)
-    cmd = "%s -quality %d -outfile %s %s" % (cjpeg, q, jpg, ppm)
-    os.system(cmd)
-    cmd = "%s -outfile %s %s" % (djpeg, jpg_ppm, jpg)
-    os.system(cmd)
-    cmd = "%s %s %s" % (convert, jpg_ppm, jpg_png)
-    os.system(cmd)
-
-    jpeg_ssim_values.append(ssim_float_for_images(png, jpg_png))
+    jpg = tmp_file_base + str(q) + ".jpg"
+    test_utils.png_to_jpeg(png, q, jpg)
     jpeg_file_sizes.append(os.path.getsize(jpg))
-
-    os.remove(ppm)
+    jpg_png = jpg + ".png"
+    test_utils.jpeg_to_png(jpg, jpg_png)
+    jpeg_ssim_values.append(test_utils.ssim_float_for_images(png, jpg_png))
     os.remove(jpg)
-    os.remove(jpg_ppm)
     os.remove(jpg_png)
 
   # Calculate SSIM and file size for all WebP quality levels.
   i = 0
   while i < 100:
     q = i + 1
-
-    webp =     basename + str(q) + ".webp"
-    webp_png = basename + str(q) + "_webp.png"
-
-    cmd = "%s -quiet -q %d %s -o %s" % (cwebp, q, png, webp)
-    os.system(cmd)
-    cmd = "%s %s -o %s" % (dwebp, webp, webp_png)
-    os.system(cmd)
-
-    webp_ssim_values.append(ssim_float_for_images(png, webp_png))
+    webp = tmp_file_base + str(q) + ".webp"
+    test_utils.png_to_webp(png, q, webp)
     webp_file_sizes.append(os.path.getsize(webp))
-
+    webp_png = webp + ".png"
+    test_utils.webp_to_png(webp, webp_png)
+    webp_ssim_values.append(test_utils.ssim_float_for_images(png, webp_png))
     os.remove(webp)
     os.remove(webp_png)
-
     i += 1
 
   # For each quality value we're interested in, calculate the size of a
@@ -127,13 +88,15 @@ def main(argv):
 
       i += 1
 
-  percent_improvement = 0
-  i = 0
-  while i < len(quality_values):
-    percent_improvement += webp_ssim_equiv_file_sizes[i] / jpeg_file_sizes[i]
-    i += 1
+  jpeg_total_size = 0
+  for fs in jpeg_file_sizes:
+    jpeg_total_size += fs
 
-  print "Average percentage improvement from JPEG to WebP at equiv SSIM: " + str(percent_improvement / len(quality_values))
+  webp_total_size = 0
+  for fs in webp_ssim_equiv_file_sizes:
+    webp_total_size += fs
+
+  print "File size change from JPEG to WebP at equivalent SSIM: " + str(float(webp_total_size) / float(jpeg_total_size))[:5]
 
 if __name__ == "__main__":
   main(sys.argv)
