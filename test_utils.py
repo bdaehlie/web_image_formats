@@ -10,6 +10,14 @@ djpeg = "/opt/local/bin/djpeg"
 cwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/cwebp"
 dwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/dwebp"
 convert = "/opt/local/bin/convert"
+chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
+dhevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin"
+png2y4m = "/Users/josh/src/image-formats/daala/tools/png2y4m"
+y4m2png = "/Users/josh/src/image-formats/daala/tools/y4m2png"
+ffmpeg = "/opt/local/bin/ffmpeg"
+
+# HEVC config file
+hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_randomaccess_main.cfg"
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
@@ -78,3 +86,38 @@ def interpolate(list_a, a_value, list_b):
       return ((b_diff * percent) + list_b[i - 1])
     i += 1
   return list_b[len(list_b) - 1]
+
+def get_png_width(png_path):
+  cmd = "identify -format \"%w\" %s" % (png_path)
+  proc = os.popen(cmd, "r")
+  return int(proc.readline().strip())
+
+def get_png_height(png_path):
+  cmd = "identify -format \"%h\" %s" % (png_path)
+  proc = os.popen(cmd, "r")
+  return int(proc.readline().strip())
+
+def png_to_hevc(in_png, quality, out_hevc):
+
+
+def hevc_to_png(in_hevc, out_png):
+
+
+# Get rid of this function
+def ssim_for_png_to_hevc(png_path, quality):
+  y4m_path = png_path + ".y4m"
+  cmd = "%s %s -o %s" % (png2y4m, png_path, y4m_path)
+  os.system(cmd)
+  png_yuv_path = png_path + ".yuv"
+  cmd = "%s -y -i %s %s" % (ffmpeg, y4m_path, png_yuv_path)
+  os.system(cmd)
+  hevc_path = png_path + ".hevc"
+  hevc_yuv_path = hevc_path + ".yuv"
+  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, get_png_width(png_path), get_png_height(png_path), quality, yuv_path, hevc_path, hevc_yuv_path)
+  os.system(cmd)
+  hevc_y4m_path = hevc_path + ".y4m"
+  cmd = "%s -y -s %ix%i -i %s %s" % (ffmpeg, get_png_width(png_path), get_png_height(png_path), hevc_yuv_path, hevc_y4m_path)
+  os.system(cmd)
+  hevc_png_path = hevc_path + ".png"
+  cmd = "%s %s -o %s" % (y4m2png, hevc_y4m_path, hevc_png_path)
+  return ssim_float_for_images(png_path, hevc_png_path)
