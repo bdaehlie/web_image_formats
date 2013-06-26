@@ -25,7 +25,7 @@ def main(argv):
   jpeg_ssim_values = []
   jpeg_file_sizes = []
 
-  # Each list will be 100 entries long, one for each quality option.
+  # Each list will be 50 entries long, one for each quality option.
   hevc_ssim_values = []
   hevc_file_sizes = []
 
@@ -41,25 +41,27 @@ def main(argv):
     os.remove(jpg_png)
 
   # Calculate SSIM and file size for all hevc quality levels.
-  i = 0
-  while i < 100:
-    q = i + 1
+  # HEVC encoder has quality levels 0-50 with higher numbers being lower quality.
+  i = 50
+  while i > 0:
     hevc = tmp_file_base + str(q) + ".hevc"
-    test_utils.png_to_hevc(png, q, hevc)
-    #XXX To-do: Penalize hevc files for just being bitstreams with not containers
+    test_utils.png_to_hevc(png, i, hevc)
     hevc_file_sizes.append(os.path.getsize(hevc))
     hevc_png = hevc + ".png"
     test_utils.hevc_to_png(hevc, hevc_png)
     hevc_ssim_values.append(test_utils.ssim_float_for_images(png, hevc_png))
     os.remove(hevc)
     os.remove(hevc_png)
-    i += 1
+    i -= 1
 
   # For each quality value we're interested in, calculate the size of a
   # hevc file that is equivalent to the JPEG file via interpolation.
   hevc_ssim_equiv_file_sizes = []
   for s in jpeg_ssim_values:
     interpolated = test_utils.interpolate(hevc_ssim_values, s, hevc_file_sizes)
+    interpolated += 80 # Penalize HEVC bit streams for not having a container like
+                       # other formats do. Came up with this number because a
+                       # 1x1 pixel webp file is 84 bytes.
     hevc_ssim_equiv_file_sizes.append(interpolated)
 
   jpeg_total_size = 0

@@ -114,7 +114,8 @@ def hevc_to_png(in_hevc, out_png):
   cmd = "%s -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
   os.system(cmd)
   yuv_y4m = hevc_yuv + ".y4m"
-  cmd = "%s -y -i %s %s" % (ffmpeg, hevc_yuv, yuv_y4m)
+  #XXX to-do: don't hard-code image size
+  cmd = "%s -y -s %ix%i -i %s %s" % (ffmpeg, 512, 512, hevc_yuv, yuv_y4m)
   os.system(cmd)
   cmd = "%s %s -o %s" % (y4m2png, yuv_y4m, out_png)
   os.system(cmd)
