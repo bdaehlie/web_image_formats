@@ -11,7 +11,7 @@ cwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/cwebp"
 dwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/dwebp"
 convert = "/opt/local/bin/convert"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
-dhevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin"
+dhevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppDecoderStatic"
 png2y4m = "/Users/josh/src/image-formats/daala/tools/png2y4m"
 y4m2png = "/Users/josh/src/image-formats/daala/tools/y4m2png"
 ffmpeg = "/opt/local/bin/ffmpeg"
@@ -88,36 +88,35 @@ def interpolate(list_a, a_value, list_b):
   return list_b[len(list_b) - 1]
 
 def get_png_width(png_path):
-  cmd = "identify -format \"%w\" %s" % (png_path)
+  cmd = "identify -format \"%%w\" %s" % (png_path)
   proc = os.popen(cmd, "r")
   return int(proc.readline().strip())
 
 def get_png_height(png_path):
-  cmd = "identify -format \"%h\" %s" % (png_path)
+  cmd = "identify -format \"%%h\" %s" % (png_path)
   proc = os.popen(cmd, "r")
   return int(proc.readline().strip())
 
 def png_to_hevc(in_png, quality, out_hevc):
-
+  png_y4m = in_png + ".y4m"
+  cmd = "%s %s -o %s" % (png2y4m, in_png, png_y4m)
+  os.system(cmd)
+  y4m_yuv = png_y4m + ".yuv"
+  cmd = "%s -y -i %s %s" % (ffmpeg, png_y4m, y4m_yuv)
+  os.system(cmd)
+  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, y4m_yuv, out_hevc)
+  os.system(cmd)
+  os.remove(png_y4m)
+  os.remove(y4m_yuv)
 
 def hevc_to_png(in_hevc, out_png):
-
-
-# Get rid of this function
-def ssim_for_png_to_hevc(png_path, quality):
-  y4m_path = png_path + ".y4m"
-  cmd = "%s %s -o %s" % (png2y4m, png_path, y4m_path)
+  hevc_yuv = in_hevc + ".yuv"
+  cmd = "%s -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
   os.system(cmd)
-  png_yuv_path = png_path + ".yuv"
-  cmd = "%s -y -i %s %s" % (ffmpeg, y4m_path, png_yuv_path)
+  yuv_y4m = hevc_yuv + ".y4m"
+  cmd = "%s -y -i %s %s" % (ffmpeg, hevc_yuv, yuv_y4m)
   os.system(cmd)
-  hevc_path = png_path + ".hevc"
-  hevc_yuv_path = hevc_path + ".yuv"
-  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, get_png_width(png_path), get_png_height(png_path), quality, yuv_path, hevc_path, hevc_yuv_path)
+  cmd = "%s %s -o %s" % (y4m2png, yuv_y4m, out_png)
   os.system(cmd)
-  hevc_y4m_path = hevc_path + ".y4m"
-  cmd = "%s -y -s %ix%i -i %s %s" % (ffmpeg, get_png_width(png_path), get_png_height(png_path), hevc_yuv_path, hevc_y4m_path)
-  os.system(cmd)
-  hevc_png_path = hevc_path + ".png"
-  cmd = "%s %s -o %s" % (y4m2png, hevc_y4m_path, hevc_png_path)
-  return ssim_float_for_images(png_path, hevc_png_path)
+  os.remove(hevc_yuv)
+  os.remove(yuv_y4m)
