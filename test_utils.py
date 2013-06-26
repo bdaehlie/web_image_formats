@@ -52,3 +52,11 @@ def jpeg_to_png(in_jpeg, out_png):
   cmd = "%s %s %s" % (convert, jpg_ppm, out_png)
   os.system(cmd)
   os.remove(jpg_ppm)
+
+# This takes two lists, a and b, which must be of equal length.
+# Lists can be integers or floats, and they don't have to match.
+# This also take a value in the same terms as the values in list a.
+# This will interpolate a point in terms of list b based on where
+# the a value falls in list a.
+def interpolate(list_a, a_value, list_b):
+

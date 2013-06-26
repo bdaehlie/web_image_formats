@@ -85,7 +85,6 @@ def main(argv):
         # print "Interpolated file size: " + str(interpolated)
         webp_ssim_equiv_file_sizes.append(interpolated)
         break;
-
       i += 1
 
   percent_improvement = 0
