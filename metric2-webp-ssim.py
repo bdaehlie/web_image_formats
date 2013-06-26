@@ -58,34 +58,8 @@ def main(argv):
   # WebP file that is equivalent to the JPEG file via interpolation.
   webp_ssim_equiv_file_sizes = []
   for s in jpeg_ssim_values:
-    i = 0
-    while i < 100:
-      if webp_ssim_values[i] < s:
-        if i == 99:
-          webp_ssim_equiv_file_sizes.append(webp_file_sizes[99])
-          break;
-      if webp_ssim_values[i] == s:
-        webp_ssim_equiv_file_sizes.append(webp_file_sizes[i])
-        break
-      if webp_ssim_values[i] > s:
-        if i == 0:
-          webp_ssim_equiv_file_sizes.append(webp_file_sizes[0])
-          break
-        webp_diff = webp_ssim_values[i] - webp_ssim_values[i - 1]
-        if webp_diff == 0:
-          webp_ssim_equiv_file_sizes.append(webp_file_sizes[i])
-          break;
-        jpeg_diff = s - webp_ssim_values[i - 1]
-        percent = jpeg_diff / webp_diff
-        webp_fs_diff = webp_file_sizes[i] - webp_file_sizes[i - 1]
-        interpolated = (webp_fs_diff * percent) + webp_file_sizes[i - 1]
-        # print "JPEG SSIM: " + str(s)
-        # print "WebP SSIM larger: " + str(webp_ssim_values[i]) + " WebP SSIM smaller: " + str(webp_ssim_values[i - 1])
-        # print "WebP file size larger: " + str(webp_file_sizes[i]) + " WebP file size smaller: " + str(webp_file_sizes[i - 1])
-        # print "Interpolated file size: " + str(interpolated)
-        webp_ssim_equiv_file_sizes.append(interpolated)
-        break;
-      i += 1
+    interpolated = test_utils.interpolate(webp_ssim_values, s, webp_file_sizes)
+    webp_ssim_equiv_file_sizes.append(interpolated)
 
   percent_improvement = 0
   i = 0

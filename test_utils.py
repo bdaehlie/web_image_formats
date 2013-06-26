@@ -55,8 +55,26 @@ def jpeg_to_png(in_jpeg, out_png):
 
 # This takes two lists, a and b, which must be of equal length.
 # Lists can be integers or floats, and they don't have to match.
+# Lists must contain values in ascending order, duplicates allowed.
 # This also take a value in the same terms as the values in list a.
 # This will interpolate a point in terms of list b based on where
 # the a value falls in list a.
 def interpolate(list_a, a_value, list_b):
-
+  if (len(list_a) != len(list_b)) or (len(list_a) < 1):
+    print "Unacceptable lists passed to interpolate function!"
+  i = 0
+  while i < len(list_a):
+    if list_a[i] == a_value:
+      return list_b[i]
+    if list_a[i] > a_value:
+      if i == 0:
+        return list_b[0]
+      a_diff = list_a[i] - list_a[i - 1]
+      if a_diff == 0:
+        return list_b[i]
+      a_val_diff = a_value - list_a[i - 1]
+      percent = a_val_diff / a_diff
+      b_diff = list_b[i] - list_b[i - 1]
+      return ((b_diff * percent) + list_b[i - 1])
+    i += 1
+  return list_b[len(list_b) - 1]
