@@ -41,9 +41,8 @@ def main(argv):
     os.remove(jpg_png)
 
   # Calculate SSIM and file size for all WebP quality levels.
-  i = 0
-  while i < 100:
-    q = i + 1
+  q = 1
+  while q < 100:
     webp = tmp_file_base + str(q) + ".webp"
     test_utils.png_to_webp(png, q, webp)
     webp_file_sizes.append(os.path.getsize(webp))
@@ -52,7 +51,7 @@ def main(argv):
     webp_ssim_values.append(test_utils.ssim_float_for_images(png, webp_png))
     os.remove(webp)
     os.remove(webp_png)
-    i += 1
+    q += 1
 
   # For each quality value we're interested in, calculate the size of a
   # WebP file that is equivalent to the JPEG file via interpolation.

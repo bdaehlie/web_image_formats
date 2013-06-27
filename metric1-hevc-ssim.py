@@ -42,17 +42,17 @@ def main(argv):
 
   # Calculate SSIM and file size for all hevc quality levels.
   # HEVC encoder has quality levels 0-50 with higher numbers being lower quality.
-  i = 50
-  while i > 0:
+  q = 50
+  while q > 0:
     hevc = tmp_file_base + str(q) + ".hevc"
-    test_utils.png_to_hevc(png, i, hevc)
+    test_utils.png_to_hevc(png, q, hevc)
     hevc_file_sizes.append(os.path.getsize(hevc))
     hevc_png = hevc + ".png"
     test_utils.hevc_to_png(hevc, test_utils.get_png_width(png), test_utils.get_png_height(png), hevc_png)
     hevc_ssim_values.append(test_utils.ssim_float_for_images(png, hevc_png))
     os.remove(hevc)
     os.remove(hevc_png)
-    i -= 1
+    q -= 1
 
   # For each quality value we're interested in, calculate the size of a
   # hevc file that is equivalent to the JPEG file via interpolation.
