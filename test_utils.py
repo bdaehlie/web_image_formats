@@ -109,13 +109,14 @@ def png_to_hevc(in_png, quality, out_hevc):
   os.remove(png_y4m)
   os.remove(y4m_yuv)
 
-def hevc_to_png(in_hevc, out_png):
+# HEVC files are just bitstreams with no meta-data.
+# This means we need to have dimensions passed in.
+def hevc_to_png(in_hevc, width, height, out_png):
   hevc_yuv = in_hevc + ".yuv"
   cmd = "%s -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
   os.system(cmd)
   yuv_y4m = hevc_yuv + ".y4m"
-  #XXX to-do: don't hard-code image size
-  cmd = "%s -y -s %ix%i -i %s %s" % (ffmpeg, 512, 512, hevc_yuv, yuv_y4m)
+  cmd = "%s -y -s %ix%i -i %s %s" % (ffmpeg, width, height, hevc_yuv, yuv_y4m)
   os.system(cmd)
   cmd = "%s %s -o %s" % (y4m2png, yuv_y4m, out_png)
   os.system(cmd)

@@ -48,7 +48,7 @@ def main(argv):
     test_utils.png_to_hevc(png, i, hevc)
     hevc_file_sizes.append(os.path.getsize(hevc))
     hevc_png = hevc + ".png"
-    test_utils.hevc_to_png(hevc, hevc_png)
+    test_utils.hevc_to_png(hevc, test_utils.get_png_width(png), test_utils.get_png_height(png), hevc_png)
     hevc_ssim_values.append(test_utils.ssim_float_for_images(png, hevc_png))
     os.remove(hevc)
     os.remove(hevc_png)
