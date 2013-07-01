@@ -17,8 +17,7 @@ def main(argv):
   png = argv[1]
   tmp_file_base = test_utils.tmpdir + os.path.basename(png)
 
-  # Quality values we're interested in. This is essentially an optimization
-  # to avoid working on every one.
+  # JPEG quality values we're interested in.
   quality_values = [50, 55, 60, 65, 70, 75, 80, 85, 90, 95]
 
   # These lists will have one entry per quality value we're testing.
@@ -41,8 +40,8 @@ def main(argv):
     os.remove(jpg_png)
 
   # Calculate SSIM and file size for all WebP quality levels.
-  q = 1
-  while q < 100:
+  q = 0
+  while q <= 100:
     webp = tmp_file_base + str(q) + ".webp"
     test_utils.png_to_webp(png, q, webp)
     webp_file_sizes.append(os.path.getsize(webp))
@@ -66,7 +65,7 @@ def main(argv):
     percent_improvement += webp_ssim_equiv_file_sizes[i] / jpeg_file_sizes[i]
     i += 1
 
-  print "Average percentage size of WebP to JPEG at equiv SSIM: " + str(percent_improvement / len(quality_values))
+  print "Average percentage size of WebP to JPEG at equiv SSIM: " + str(percent_improvement / len(quality_values))[:5]
 
 if __name__ == "__main__":
   main(sys.argv)
