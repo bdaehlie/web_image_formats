@@ -77,15 +77,16 @@ def interpolate(list_a, a_value, list_b):
     if list_a[i] > a_value:
       if i == 0:
         return list_b[0]
-      a_diff = list_a[i] - list_a[i - 1]
+      h = i - 1
+      a_diff = list_a[i] - list_a[h]
       if a_diff == 0:
         return list_b[i]
-      a_val_diff = a_value - list_a[i - 1]
+      a_val_diff = a_value - list_a[h]
       percent = a_val_diff / a_diff
-      b_diff = list_b[i] - list_b[i - 1]
-      return ((b_diff * percent) + list_b[i - 1])
+      b_diff = list_b[i] - list_b[h]
+      return ((b_diff * percent) + list_b[h])
     i += 1
-  return list_b[len(list_b) - 1]
+  return list_b[-1]
 
 def get_png_width(png_path):
   cmd = "identify -format \"%%w\" %s" % (png_path)
