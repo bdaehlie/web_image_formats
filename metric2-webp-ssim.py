@@ -56,7 +56,7 @@ def main(argv):
   # WebP file that is equivalent to the JPEG file via interpolation.
   webp_ssim_equiv_file_sizes = []
   for s in jpeg_ssim_values:
-    interpolated = test_utils.interpolate(webp_ssim_values, s, webp_file_sizes)
+    interpolated = test_utils.lists_interpolate(webp_ssim_values, s, webp_file_sizes)
     webp_ssim_equiv_file_sizes.append(interpolated)
 
   percent_improvement = 0

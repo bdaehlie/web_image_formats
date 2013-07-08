@@ -9,11 +9,11 @@ import test_utils
 
 def main(argv):
   if len(argv) < 2:
-  	print "First arg is a JPEG quality value to test (e.g. '75')."
-  	print "Second arg is the path to an image to test (e.g. 'images/Lenna.jpg')."
-  	print "Output is four lines: SSIM, HEVC file size, JPEG file size, and HEVC to JPEG file size ratio."
-  	print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
-  	return
+    print "First arg is a JPEG quality value to test (e.g. '75')."
+    print "Second arg is the path to an image to test (e.g. 'images/Lenna.jpg')."
+    print "Output is four lines: SSIM, HEVC file size, JPEG file size, and HEVC to JPEG file size ratio."
+    print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
+    return
 
   jpeg_q = int(argv[1])
   png = argv[2]
@@ -29,26 +29,34 @@ def main(argv):
   os.remove(jpg)
   os.remove(jpg_png)
 
-  # Calculate SSIM and file size for all HEVC quality levels.
-  hevc_ssim_values = []
-  hevc_file_sizes = []
-  q = 50
-  while q > 0:
+  hevc_ssim = 0.0
+  hevc_file_size = 0
+  q = 1
+  while q <= 50:
     hevc = tmp_file_base + str(q) + ".hevc"
     test_utils.png_to_hevc(png, q, hevc)
-    hevc_file_size = os.path.getsize(hevc)
-    hevc_file_size += 80 # Penalize HEVC bit streams for not having a container like
-                         # other formats do. Came up with this number because a
-                         # 1x1 pixel webp file is 84 bytes.
-    hevc_file_sizes.append(hevc_file_size)
     hevc_png = hevc + ".png"
     test_utils.hevc_to_png(hevc, test_utils.get_png_width(png), test_utils.get_png_height(png), hevc_png)
-    hevc_ssim_values.append(test_utils.ssim_float_for_images(png, hevc_png))
+    ssim = test_utils.ssim_float_for_images(png, hevc_png)
+    file_size = os.path.getsize(hevc)
+    file_size += 80 # Penalize HEVC bit streams for not having a container like
+                    # other formats do. Came up with this number because a
+                    # 1x1 pixel hevc file is 84 bytes.
+    if ssim < jpeg_ssim:
+      if hevc_file_size == 0:
+        # We require that the target format be capable of producing an
+        # image at equal or greater quality than JPEG image being tested.
+        sys.stderr.write("Target format cannot match JPEG quality, aborting!\n")
+        sys.exit(1)
+      else:
+        hevc_file_size = test_utils.file_size_interpolate(hevc_ssim, ssim, jpeg_ssim, hevc_file_size, file_size)
+        hevc_ssim = jpeg_ssim # The HEVC SSIM after interpolation is the same as the JPEG SSIM.
+      break
+    hevc_ssim = ssim
+    hevc_file_size = file_size
     os.remove(hevc)
     os.remove(hevc_png)
-    q -= 1
-
-  hevc_file_size = test_utils.interpolate(hevc_ssim_values, jpeg_ssim, hevc_file_sizes)
+    q += 1
 
   ratio = hevc_file_size / jpeg_file_size
 

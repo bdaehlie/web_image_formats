@@ -72,13 +72,18 @@ def jpeg_to_png(in_jpeg, out_png):
   run_silent(cmd)
   os.remove(jpg_ppm)
 
+# Returns file size at particular SSIM via interpolation.
+def file_size_interpolate(ssim_high, ssim_low, ssim_value, file_size_high, file_size_low):
+  ssim_p = (ssim_value - ssim_low) / (ssim_high - ssim_low)
+  return (((file_size_high - file_size_low) * ssim_p) + file_size_low)
+
 # This takes two lists, a and b, which must be of equal length.
 # Lists can be integers or floats, and they don't have to match.
 # Lists must contain values in ascending order, duplicates allowed.
 # This also take a value in the same terms as the values in list a.
 # This will interpolate a point in terms of list b based on where
 # the a value falls in list a.
-def interpolate(list_a, a_value, list_b):
+def lists_interpolate(list_a, a_value, list_b):
   if (len(list_a) != len(list_b)) or (len(list_a) < 1):
     print "Unacceptable lists passed to interpolate function!"
   i = 0

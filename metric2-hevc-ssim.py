@@ -56,7 +56,7 @@ def main(argv):
   # hevc file that is equivalent to the JPEG file via interpolation.
   hevc_ssim_equiv_file_sizes = []
   for s in jpeg_ssim_values:
-    interpolated = test_utils.interpolate(hevc_ssim_values, s, hevc_file_sizes)
+    interpolated = test_utils.lists_interpolate(hevc_ssim_values, s, hevc_file_sizes)
     interpolated += 80 # Penalize HEVC bit streams for not having a container like
                        # other formats do. Came up with this number because a
                        # 1x1 pixel webp file is 84 bytes.

@@ -29,22 +29,31 @@ def main(argv):
   os.remove(jpg)
   os.remove(jpg_png)
 
-  # Calculate SSIM and file size for all WebP quality levels.
-  webp_ssim_values = []
-  webp_file_sizes = []
-  q = 0
+  webp_ssim = 0.0
+  webp_file_size = 0
+  q = 100
   while q <= 100:
     webp = tmp_file_base + str(q) + ".webp"
     test_utils.png_to_webp(png, q, webp)
-    webp_file_sizes.append(os.path.getsize(webp))
     webp_png = webp + ".png"
     test_utils.webp_to_png(webp, webp_png)
-    webp_ssim_values.append(test_utils.ssim_float_for_images(png, webp_png))
+    ssim = test_utils.ssim_float_for_images(png, webp_png)
+    file_size = os.path.getsize(webp)
+    if ssim < jpeg_ssim:
+      if webp_file_size == 0:
+        # We require that the target format be capable of producing an
+        # image at equal or greater quality than JPEG image being tested.
+        sys.stderr.write("Target format cannot match JPEG quality, aborting!\n")
+        sys.exit(1)
+      else:
+        webp_file_size = test_utils.file_size_interpolate(webp_ssim, ssim, jpeg_ssim, webp_file_size, file_size)
+        webp_ssim = jpeg_ssim # The WebP SSIM after interpolation is the same as the JPEG SSIM.
+      break
+    webp_ssim = ssim
+    webp_file_size = file_size
     os.remove(webp)
     os.remove(webp_png)
-    q += 1
-
-  webp_file_size = test_utils.interpolate(webp_ssim_values, jpeg_ssim, webp_file_sizes)
+    q -= 1
 
   ratio = webp_file_size / jpeg_file_size
 
