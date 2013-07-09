@@ -18,7 +18,7 @@ def main(argv):
   jpeg_q = int(argv[1])
   png = argv[2]
 
-  tmp_file_base = test_utils.tmpdir + os.path.basename(png)
+  tmp_file_base = test_utils.path_for_file_in_tmp(png)
 
   jpg = tmp_file_base + str(jpeg_q) + ".jpg"
   test_utils.png_to_jpeg(png, jpeg_q, jpg)
@@ -60,7 +60,7 @@ def main(argv):
   print "SSIM: " + str(jpeg_ssim)[:5]
   print "WebP_File_Size_(kb): %.1f" % (int(webp_file_size) / 1024.0)
   print "JPEG_File_Size_(kb): %.1f" % (int(jpeg_file_size) / 1024.0)
-  print "WebP_to_JPEG_File_Size_Ratio: " + str(ratio)[:5]
+  print "WebP_to_JPEG_File_Size_Ratio: %.2f" % (ratio)
 
 if __name__ == "__main__":
   main(sys.argv)

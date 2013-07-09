@@ -18,7 +18,7 @@ def main(argv):
   jpeg_q = int(argv[1])
   png = argv[2]
 
-  tmp_file_base = test_utils.tmpdir + os.path.basename(png)
+  tmp_file_base = test_utils.path_for_file_in_tmp(png)
 
   jpg = tmp_file_base + str(jpeg_q) + ".jpg"
   test_utils.png_to_jpeg(png, jpeg_q, jpg)

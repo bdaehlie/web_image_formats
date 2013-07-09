@@ -46,7 +46,7 @@ def main(argv):
   print "Avg_SSIM: " + str(avg_ssim)[:5]
   print "Avg_Tested_Format_File_Size_(kb): %.1f" % (avg_tformat_file_size)
   print "Avg_JPEG_File_Size_(kb): %.1f" % (avg_jpeg_file_size)
-  print "Tested_Format_to_JPEG_File_Size_Ratio: " + str(ratio)[:5]
+  print "Tested_Format_to_JPEG_File_Size_Ratio: %.2f" % (ratio)
 
 if __name__ == "__main__":
   main(sys.argv)

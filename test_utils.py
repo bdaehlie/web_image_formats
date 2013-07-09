@@ -46,7 +46,7 @@ def ssim_float_for_images(img1_path, img2_path):
 # Converts a file path to the path that represents
 # the same file in the tmp dir.
 def path_for_file_in_tmp(in_path):
-  return tmpdir + os.path.basename(in_path)
+  return tmpdir + str(os.getpid()) + os.path.basename(in_path)
 
 def png_to_webp(in_png, quality, out_webp):
   cmd = "%s -quiet -q %d %s -o %s" % (cwebp, quality, in_png, out_webp)
@@ -57,7 +57,7 @@ def webp_to_png(in_webp, out_png):
   run_silent(cmd)
 
 def png_to_jpeg(in_png, quality, out_jpeg):
-  png_ppm = path_for_file_in_tmp(in_png) + ".ppm" # XXXJOSH is path_for_file_in_tmp necessary here?
+  png_ppm = path_for_file_in_tmp(in_png) + ".ppm"
   cmd = "%s %s %s" % (convert, in_png, png_ppm)
   run_silent(cmd)
   cmd = "%s -quality %d -outfile %s %s" % (cjpeg, quality, out_jpeg, png_ppm)
@@ -65,7 +65,7 @@ def png_to_jpeg(in_png, quality, out_jpeg):
   os.remove(png_ppm)
 
 def jpeg_to_png(in_jpeg, out_png):
-  jpg_ppm = in_jpeg + ".ppm"
+  jpg_ppm = path_for_file_in_tmp(in_jpeg) + ".ppm"
   cmd = "%s -outfile %s %s" % (djpeg, jpg_ppm, in_jpeg)
   run_silent(cmd)
   cmd = "%s %s %s" % (convert, jpg_ppm, out_png)
@@ -115,7 +115,7 @@ def get_png_height(png_path):
   return int(proc.readline().strip())
 
 def png_to_hevc(in_png, quality, out_hevc):
-  png_y4m = in_png + ".y4m"
+  png_y4m = path_for_file_in_tmp(in_png) + ".y4m"
   cmd = "%s %s -o %s" % (png2y4m, in_png, png_y4m)
   run_silent(cmd)
   y4m_yuv = png_y4m + ".yuv"
@@ -129,7 +129,7 @@ def png_to_hevc(in_png, quality, out_hevc):
 # HEVC files are just bitstreams with no meta-data.
 # This means we need to have dimensions passed in.
 def hevc_to_png(in_hevc, width, height, out_png):
-  hevc_yuv = in_hevc + ".yuv"
+  hevc_yuv = path_for_file_in_tmp(in_hevc) + ".yuv"
   cmd = "%s -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
   run_silent(cmd)
   yuv_y4m = hevc_yuv + ".y4m"
