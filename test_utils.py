@@ -57,7 +57,7 @@ def webp_to_png(in_webp, out_png):
   run_silent(cmd)
 
 def png_to_jpeg(in_png, quality, out_jpeg):
-  png_ppm = path_for_file_in_tmp(in_png) + ".ppm"
+  png_ppm = path_for_file_in_tmp(in_png) + ".ppm" # XXXJOSH is path_for_file_in_tmp necessary here?
   cmd = "%s %s %s" % (convert, in_png, png_ppm)
   run_silent(cmd)
   cmd = "%s -quality %d -outfile %s %s" % (cjpeg, quality, out_jpeg, png_ppm)

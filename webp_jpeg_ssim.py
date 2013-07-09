@@ -39,6 +39,8 @@ def main(argv):
     test_utils.webp_to_png(webp, webp_png)
     ssim = test_utils.ssim_float_for_images(png, webp_png)
     file_size = os.path.getsize(webp)
+    os.remove(webp)
+    os.remove(webp_png)
     if ssim < jpeg_ssim:
       if webp_file_size == 0:
         # We require that the target format be capable of producing an
@@ -51,8 +53,6 @@ def main(argv):
       break
     webp_ssim = ssim
     webp_file_size = file_size
-    os.remove(webp)
-    os.remove(webp_png)
     q -= 1
 
   ratio = webp_file_size / jpeg_file_size
