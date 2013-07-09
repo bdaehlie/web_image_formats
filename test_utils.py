@@ -14,6 +14,8 @@ dwebp = "/Users/josh/src/image-formats/libwebp-0.3.0/dwebp"
 convert = "/opt/local/bin/convert"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
 dhevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppDecoderStatic"
+cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
+djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
 png2y4m = "/Users/josh/src/image-formats/daala/tools/png2y4m"
 y4m2png = "/Users/josh/src/image-formats/daala/tools/y4m2png"
 ffmpeg = "/opt/local/bin/ffmpeg"
@@ -139,3 +141,19 @@ def hevc_to_png(in_hevc, width, height, out_png):
   run_silent(cmd)
   os.remove(hevc_yuv)
   os.remove(yuv_y4m)
+
+def jxr_to_png(in_jxr, out_png):
+  jxr_bmp = path_for_file_in_tmp(in_jxr) + ".bmp"
+  cmd = "%s -i %s -o %s" % (djxr, in_jxr, jxr_bmp)
+  run_silent(cmd)
+  cmd = "%s %s %s" % (convert, jxr_bmp, out_png)
+  run_silent(cmd)
+  os.remove(jxr_bmp)
+
+def png_to_jxr(in_png, quality, out_jxr):
+  png_bmp = path_for_file_in_tmp(in_png) + ".bmp"
+  cmd = "%s %s %s" % (convert, in_png, png_bmp)
+  run_silent(cmd)
+  cmd = "%s -i %s -o %s -q %f" % (cjxr, png_bmp, out_jxr, quality)
+  run_silent(cmd)
+  os.remove(png_bmp)
