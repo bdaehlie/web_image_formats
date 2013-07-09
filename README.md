@@ -1,4 +1,4 @@
-This is a test suite assembled to test various lossy image formats. Right now it supports testing WebP and HEVC-P.
+This is a test suite assembled to test various lossy image formats. Right now it supports testing WebP, HEVC-P, and JPEG-XR.
 
 This suite was created and is maintained on OS X. It can probably work on Linux with minimal tweaking.
 
