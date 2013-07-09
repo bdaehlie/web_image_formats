@@ -42,6 +42,8 @@ def main(argv):
     file_size += 80 # Penalize HEVC bit streams for not having a container like
                     # other formats do. Came up with this number because a
                     # 1x1 pixel hevc file is 84 bytes.
+    os.remove(hevc)
+    os.remove(hevc_png)
     if ssim < jpeg_ssim:
       if hevc_file_size == 0:
         # We require that the target format be capable of producing an
@@ -54,8 +56,6 @@ def main(argv):
       break
     hevc_ssim = ssim
     hevc_file_size = file_size
-    os.remove(hevc)
-    os.remove(hevc_png)
     q += 1
 
   ratio = hevc_file_size / jpeg_file_size
@@ -63,7 +63,7 @@ def main(argv):
   print "SSIM: " + str(jpeg_ssim)[:5]
   print "HEVC_File_Size_(kb): %.1f" % (int(hevc_file_size) / 1024.0)
   print "JPEG_File_Size_(kb): %.1f" % (int(jpeg_file_size) / 1024.0)
-  print "HEVC_to_JPEG_File_Size_Ratio: " + str(ratio)[:5]
+  print "HEVC_to_JPEG_File_Size_Ratio: %.2f" % (ratio)
 
 if __name__ == "__main__":
   main(sys.argv)
