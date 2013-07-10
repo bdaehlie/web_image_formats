@@ -123,10 +123,13 @@ def png_to_hevc(in_png, quality, out_hevc):
   y4m_yuv = png_y4m + ".yuv"
   cmd = "%s -y -i %s %s" % (ffmpeg, png_y4m, y4m_yuv)
   run_silent(cmd)
-  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, y4m_yuv, out_hevc)
+  yuv_rec = y4m_yuv + ".rec.yuv" # HEVC encoder outputs a reconstructed YUV file, which we need to put in the tmp dir.
+                                 # We don't actually use it, we decode the HEVC using the decoder.
+  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, y4m_yuv, out_hevc, yuv_rec)
   run_silent(cmd)
   os.remove(png_y4m)
   os.remove(y4m_yuv)
+  os.remove(yuv_rec)
 
 # HEVC files are just bitstreams with no meta-data.
 # This means we need to have dimensions passed in.
