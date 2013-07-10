@@ -31,8 +31,8 @@ def main(argv):
 
   hevc_ssim = 0.0
   hevc_file_size = 0
-  q = 1
-  while q <= 50:
+  q = 0.0
+  while q <= 50.0:
     hevc = tmp_file_base + str(q) + ".hevc"
     test_utils.png_to_hevc(png, q, hevc)
     hevc_png = hevc + ".png"
@@ -56,7 +56,7 @@ def main(argv):
       break
     hevc_ssim = ssim
     hevc_file_size = file_size
-    q += 1
+    q += 1.0
 
   ratio = hevc_file_size / jpeg_file_size
 
