@@ -43,23 +43,36 @@ def main(argv):
     os.remove(jxr_png)
     if ssim < jpeg_ssim:
       if jxr_file_size == 0:
-        # We require that the target format be capable of producing an
+        # Normally we require that the target format be capable of producing an
         # image at equal or greater quality than JPEG image being tested.
-        sys.stderr.write("Target format cannot match JPEG quality, aborting!\n")
-        sys.exit(1)
+        # However, sometimes the quality metric will produce nearly equal values at
+        # the high end and the target format can't match JPEG, particularly if
+        # the image lacks much complexity. It can also happen, usually with the same
+        # types of images, that the quality metric does not go down as requested
+        # quality goes down. This can be a bug in the encoder or the quality metric.
+        # In these troublesome cases, if the quality metric is close enough to JPEG
+        # we'll simply charge the target image format with the highest file size that
+        # it produces.
+        if (jpeg_ssim - ssim) < 0.001:
+          jxr_ssim = ssim
+          jxr_file_size = file_size
+        else:
+          sys.stderr.write("Target format cannot match JPEG quality, aborting!\n")
+          sys.exit(1)
       else:
         jxr_file_size = test_utils.file_size_interpolate(jxr_ssim, ssim, jpeg_ssim, jxr_file_size, file_size)
+        # Note that jpeg_ssim must be updated *after* it's used for interpolation.
         jxr_ssim = jpeg_ssim # The JPEG-XR SSIM after interpolation is the same as the JPEG SSIM.
       break
     jxr_ssim = ssim
     jxr_file_size = file_size
     q -= 0.01
 
-  ratio = jxr_file_size / jpeg_file_size
+  ratio = float(jxr_file_size) / float(jpeg_file_size)
 
   print "SSIM: " + str(jpeg_ssim)[:5]
-  print "JPEG-XR_File_Size_(kb): %.1f" % (int(jxr_file_size) / 1024.0)
-  print "JPEG_File_Size_(kb): %.1f" % (int(jpeg_file_size) / 1024.0)
+  print "JPEG-XR_File_Size_(kb): %.1f" % (float(jxr_file_size) / 1024.0)
+  print "JPEG_File_Size_(kb): %.1f" % (float(jpeg_file_size) / 1024.0)
   print "JPEG-XR_to_JPEG_File_Size_Ratio: %.2f" % (ratio)
 
 if __name__ == "__main__":
