@@ -160,3 +160,15 @@ def png_to_jxr(in_png, quality, out_jxr):
   cmd = "%s -i %s -o %s -q %f" % (cjxr, png_bmp, out_jxr, quality)
   run_silent(cmd)
   os.remove(png_bmp)
+
+def get_jpeg_results(in_png, jpeg_q):
+  tmp_file_base = path_for_file_in_tmp(in_png)
+  jpg = tmp_file_base + str(jpeg_q) + ".jpg"
+  png_to_jpeg(in_png, jpeg_q, jpg)
+  jpeg_file_size = os.path.getsize(jpg)
+  jpg_png = jpg + ".png"
+  jpeg_to_png(jpg, jpg_png)
+  jpeg_ssim = ssim_float_for_images(in_png, jpg_png)
+  os.remove(jpg)
+  os.remove(jpg_png)
+  return (jpeg_ssim, jpeg_file_size)

@@ -5,68 +5,92 @@
 import os
 import sys
 import time
+import math
 import test_utils
+
+# Returns an SSIM value and a file size
+def get_webp_results(in_png, webp_q):
+  tmp_file_base = test_utils.path_for_file_in_tmp(in_png)
+  webp = tmp_file_base + str(webp_q) + ".webp"
+  test_utils.png_to_webp(in_png, webp_q, webp)
+  webp_png = webp + ".png"
+  test_utils.webp_to_png(webp, webp_png)
+  ssim = test_utils.ssim_float_for_images(in_png, webp_png)
+  file_size = os.path.getsize(webp)
+  os.remove(webp)
+  os.remove(webp_png)
+  return (ssim, file_size)
 
 def main(argv):
   if len(argv) < 2:
-  	print "First arg is a JPEG quality value to test (e.g. '75')."
-  	print "Second arg is the path to an image to test (e.g. 'images/Lenna.jpg')."
-  	print "Output is four lines: SSIM, WebP file size, JPEG file size, and WebP to JPEG file size ratio."
-  	print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
-  	return
+    print "First arg is a JPEG quality value to test (e.g. '75')."
+    print "Second arg is the path to an image to test (e.g. 'images/Lenna.jpg')."
+    print "Output is four lines: SSIM, WebP file size, JPEG file size, and WebP to JPEG file size ratio."
+    print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
+    return
 
   jpeg_q = int(argv[1])
   png = argv[2]
 
-  tmp_file_base = test_utils.path_for_file_in_tmp(png)
+  jpeg_results = test_utils.get_jpeg_results(png, jpeg_q)
+  jpeg_ssim = jpeg_results[0]
+  jpeg_file_size = jpeg_results[1]
 
-  jpg = tmp_file_base + str(jpeg_q) + ".jpg"
-  test_utils.png_to_jpeg(png, jpeg_q, jpg)
-  jpeg_file_size = os.path.getsize(jpg)
-  jpg_png = jpg + ".png"
-  test_utils.jpeg_to_png(jpg, jpg_png)
-  jpeg_ssim = test_utils.ssim_float_for_images(png, jpg_png)
-  os.remove(jpg)
-  os.remove(jpg_png)
+  # Possible quality values so we can use an algorithm implementation that
+  # only needs to deal with integer array indices.
+  possible_q = []
+  q = 0
+  while q < 101:
+    possible_q.append(q)
+    q += 1
 
-  webp_ssim = 0.0
-  webp_file_size = 0
-  q = 100
-  while q > 0:
-    webp = tmp_file_base + str(q) + ".webp"
-    test_utils.png_to_webp(png, q, webp)
-    webp_png = webp + ".png"
-    test_utils.webp_to_png(webp, webp_png)
-    ssim = test_utils.ssim_float_for_images(png, webp_png)
-    file_size = os.path.getsize(webp)
-    os.remove(webp)
-    os.remove(webp_png)
-    if ssim < jpeg_ssim:
-      if webp_file_size == 0:
-        # Normally we require that the target format be capable of producing an
-        # image at equal or greater quality than JPEG image being tested.
-        # However, sometimes the quality metric will produce nearly equal values at
-        # the high end and the target format can't match JPEG, particularly if
-        # the image lacks much complexity. It can also happen, usually with the same
-        # types of images, that the quality metric does not go down as requested
-        # quality goes down. This can be a bug in the encoder or the quality metric.
-        # In these troublesome cases, if the quality metric is close enough to JPEG
-        # we'll simply charge the target image format with the highest file size that
-        # it produces.
-        if (jpeg_ssim - ssim) < 0.001:
-          webp_ssim = ssim
-          webp_file_size = file_size
-        else:
-          sys.stderr.write("Target format cannot match JPEG quality, aborting!\n")
-          sys.exit(1)
-      else:
-        webp_file_size = test_utils.file_size_interpolate(webp_ssim, ssim, jpeg_ssim, webp_file_size, file_size)
-        # Note that webp_ssim must be updated *after* it's used for interpolation.
-        webp_ssim = jpeg_ssim # The WebP SSIM after interpolation is the same as the JPEG SSIM.
-      break
-    webp_ssim = ssim
-    webp_file_size = file_size
-    q -= 1
+  low_index = -1
+  low_ssim = 0.0
+  low_file_size = 0
+  high_index = len(possible_q)
+  high_ssim = 0.0
+  high_file_size = 0.0
+  while (high_index - low_index) > 1:
+    i = int(math.floor((float(high_index - low_index) / 2.0)) + low_index)
+    webp_results = get_webp_results(png, possible_q[i])
+    webp_ssim = webp_results[0]
+    webp_file_size = webp_results[1]
+    if webp_ssim == jpeg_ssim:
+      low_index = i
+      low_ssim = webp_ssim
+      low_file_size = webp_file_size
+      high_index = i
+      high_ssim = webp_ssim
+      high_file_size = webp_file_size
+      break;
+    if webp_ssim < jpeg_ssim:
+      low_index = i
+      low_ssim = webp_ssim
+      low_file_size = webp_file_size
+    if webp_ssim > jpeg_ssim:
+      high_index = i
+      high_ssim = webp_ssim
+      high_file_size = webp_file_size
+
+  # See 'hevc_tecnick_034_situation.txt' for explanation of the
+  # following code.
+  if low_index == -1:
+    if (high_ssim - jpeg_ssim) < 0.001:
+      low_ssim = high_ssim
+      low_file_size = high_file_size
+    else:
+      sys.stderr.write("Failure: Unsuccessful binary search!\n")
+      sys.exit(1)
+  if high_index == len(possible_q):
+    if (high_ssim - jpeg_ssim) < 0.001:
+      high_ssim = low_ssim
+      high_file_size = low_file_size
+    else:
+      sys.stderr.write("Failure: Unsuccessful binary search!\n")
+      sys.exit(1)
+
+  webp_file_size = test_utils.file_size_interpolate(high_ssim, low_ssim, jpeg_ssim, high_file_size, low_file_size)
+  webp_ssim = jpeg_ssim
 
   ratio = float(webp_file_size) / float(jpeg_file_size)
 
