@@ -4,7 +4,7 @@ This suite was created and is maintained on OS X. It can probably work on Linux 
 
 Requirements:
 * opencv (install via MacPorts)
-* http://hevc.kw.bbc.co.uk/git/w/jctvc-hm.git (HEVC-P encoder/decoder)
+* svn://hevc.kw.bbc.co.uk/svn/jctvc-hm (HEVC-P encoder/decoder)
 * https://jxrlib.codeplex.com/releases (JPEG-XR encoder/decoder)
 * https://developers.google.com/speed/webp/download (WebP encoder/decoder)
 * ImageMagick (install via MacPorts)
