@@ -45,52 +45,41 @@ def main(argv):
     q += 1
 
   low_index = -1
-  low_ssim = 0.0
-  low_file_size = 0
+  low_results = (0.0, 0)
   high_index = len(possible_q)
-  high_ssim = 0.0
-  high_file_size = 0.0
+  high_results = (0.0, 0)
   while (high_index - low_index) > 1:
     i = int(math.floor((float(high_index - low_index) / 2.0)) + low_index)
     webp_results = get_webp_results(png, possible_q[i])
     webp_ssim = webp_results[0]
     webp_file_size = webp_results[1]
     if webp_ssim == jpeg_ssim:
-      low_index = i
-      low_ssim = webp_ssim
-      low_file_size = webp_file_size
-      high_index = i
-      high_ssim = webp_ssim
-      high_file_size = webp_file_size
+      low_index = high_index = i
+      low_results = high_results = webp_results
       break;
     if webp_ssim < jpeg_ssim:
       low_index = i
-      low_ssim = webp_ssim
-      low_file_size = webp_file_size
+      low_results = webp_results
     if webp_ssim > jpeg_ssim:
       high_index = i
-      high_ssim = webp_ssim
-      high_file_size = webp_file_size
+      high_results = webp_results
 
   # See 'hevc_tecnick_034_situation.txt' for explanation of the
   # following code.
   if low_index == -1:
-    if (high_ssim - jpeg_ssim) < 0.001:
-      low_ssim = high_ssim
-      low_file_size = high_file_size
+    if (high_results[0] - jpeg_ssim) < 0.001:
+      low_results = high_results
     else:
       sys.stderr.write("Failure: Unsuccessful binary search!\n")
       sys.exit(1)
   if high_index == len(possible_q):
-    if (high_ssim - jpeg_ssim) < 0.001:
-      high_ssim = low_ssim
-      high_file_size = low_file_size
+    if (jpeg_ssim - low_results[0]) < 0.001:
+      high_results = low_results
     else:
       sys.stderr.write("Failure: Unsuccessful binary search!\n")
       sys.exit(1)
 
-  webp_file_size = test_utils.file_size_interpolate(high_ssim, low_ssim, jpeg_ssim, high_file_size, low_file_size)
-  webp_ssim = jpeg_ssim
+  webp_file_size = test_utils.file_size_interpolate(high_results[0], low_results[0], jpeg_ssim, high_results[1], low_results[1])
 
   ratio = float(webp_file_size) / float(jpeg_file_size)
 
