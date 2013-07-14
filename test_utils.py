@@ -76,7 +76,9 @@ def jpeg_to_png(in_jpeg, out_png):
 
 # Returns file size at particular SSIM via interpolation.
 def file_size_interpolate(ssim_high, ssim_low, ssim_value, file_size_high, file_size_low):
-  ssim_p = (ssim_value - ssim_low) / (ssim_high - ssim_low)
+  ssim_p = 1.0
+  if ssim_high != ssim_low:
+    ssim_p = (ssim_value - ssim_low) / (ssim_high - ssim_low)
   return (((file_size_high - file_size_low) * ssim_p) + file_size_low)
 
 # This takes two lists, a and b, which must be of equal length.
