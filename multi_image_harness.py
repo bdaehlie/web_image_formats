@@ -7,17 +7,17 @@ import subprocess
 
 def main(argv):
   if len(argv) < 4:
-  	print "First arg is a JPEG quality value to test (e.g. '75')."
-  	print "Second arg is the path to a test to run (e.g. './webp_jpeg_ssim.py')."
-  	print "All further arguments are file paths to images to test (e.g. 'images/Lenna.jpg')."
-  	print "There must be at least one image given."
-  	print "Output is four lines: SSIM, tested format file size, JPEG file size, and tested format to JPEG file size ratio."
-  	print "This is the arithmetic average of results from all images."
-  	print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
-  	return
+    print "First arg is the path to a test to run (e.g. './webp_jpeg_ssim.py')."
+    print "Second arg is a JPEG quality value to test (e.g. '75')."
+    print "All further arguments are file paths to images to test (e.g. 'images/Lenna.jpg')."
+    print "There must be at least one image given."
+    print "Output is four lines: SSIM, tested format file size, JPEG file size, and tested format to JPEG file size ratio."
+    print "This is the arithmetic average of results from all images."
+    print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
+    return
 
-  jpeg_q = int(argv[1])
-  test_path = argv[2]
+  test_path = argv[1]
+  jpeg_q = int(argv[2])
   test_images = argv[3:]
 
   ssim_total = 0.0
