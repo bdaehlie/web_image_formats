@@ -9,5 +9,3 @@ Requirements:
 * https://developers.google.com/speed/webp/download (WebP encoder/decoder)
 * ImageMagick (install via MacPorts)
 * http://mehdi.rabah.free.fr/SSIM/ (C++ SSIM evaluation)
-* https://xiph.org/daala/ (we need y4m2png and png2y4m)
-* ffmpeg (install via MacPorts)

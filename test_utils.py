@@ -16,9 +16,6 @@ chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
 dhevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppDecoderStatic"
 cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
 djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
-png2y4m = "/Users/josh/src/image-formats/daala/tools/png2y4m"
-y4m2png = "/Users/josh/src/image-formats/daala/tools/y4m2png"
-ffmpeg = "/opt/local/bin/ffmpeg"
 
 # HEVC config file
 hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_randomaccess_main.cfg"
@@ -119,18 +116,16 @@ def get_png_height(png_path):
   return int(proc.readline().strip())
 
 def png_to_hevc(in_png, quality, out_hevc):
-  png_y4m = path_for_file_in_tmp(in_png) + ".y4m"
-  cmd = "%s %s -o %s" % (png2y4m, in_png, png_y4m)
+  png_width = get_png_width(in_png)
+  png_height = get_png_height(in_png)
+  png_yuv = path_for_file_in_tmp(in_png) + ".yuv"
+  cmd = "%s %s -size %ix%i -depth 8 -sampling-factor 4:2:0 %s" % (convert, in_png, png_width, png_height, png_yuv)
   run_silent(cmd)
-  y4m_yuv = png_y4m + ".yuv"
-  cmd = "%s -y -i %s %s" % (ffmpeg, png_y4m, y4m_yuv)
-  run_silent(cmd)
-  yuv_rec = y4m_yuv + ".rec.yuv" # HEVC encoder outputs a reconstructed YUV file, which we need to put in the tmp dir.
+  yuv_rec = png_yuv + ".rec.yuv" # HEVC encoder outputs a reconstructed YUV file, which we need to put in the tmp dir.
                                  # We don't actually use it, we decode the HEVC using the decoder.
-  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, y4m_yuv, out_hevc, yuv_rec)
+  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, png_width, png_height, quality, png_yuv, out_hevc, yuv_rec)
   run_silent(cmd)
-  os.remove(png_y4m)
-  os.remove(y4m_yuv)
+  os.remove(png_yuv)
   os.remove(yuv_rec)
 
 # HEVC files are just bitstreams with no meta-data.
@@ -139,13 +134,9 @@ def hevc_to_png(in_hevc, width, height, out_png):
   hevc_yuv = path_for_file_in_tmp(in_hevc) + ".yuv"
   cmd = "%s -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
   run_silent(cmd)
-  yuv_y4m = hevc_yuv + ".y4m"
-  cmd = "%s -y -s %ix%i -i %s %s" % (ffmpeg, width, height, hevc_yuv, yuv_y4m)
-  run_silent(cmd)
-  cmd = "%s %s -o %s" % (y4m2png, yuv_y4m, out_png)
+  cmd = "%s -size %ix%i -depth 8 -sampling-factor 4:2:0 %s %s" % (convert, width, height, hevc_yuv, out_png)
   run_silent(cmd)
   os.remove(hevc_yuv)
-  os.remove(yuv_y4m)
 
 def jxr_to_png(in_jxr, out_png):
   jxr_bmp = path_for_file_in_tmp(in_jxr) + ".bmp"
