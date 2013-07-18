@@ -119,7 +119,7 @@ def png_to_hevc(in_png, quality, out_hevc):
   png_width = get_png_width(in_png)
   png_height = get_png_height(in_png)
   png_yuv = path_for_file_in_tmp(in_png) + ".yuv"
-  cmd = "%s %s -size %ix%i -depth 8 -sampling-factor 4:2:0 %s" % (convert, in_png, png_width, png_height, png_yuv)
+  cmd = "%s %s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s" % (convert, in_png, png_width, png_height, png_yuv)
   run_silent(cmd)
   yuv_rec = png_yuv + ".rec.yuv" # HEVC encoder outputs a reconstructed YUV file, which we need to put in the tmp dir.
                                  # We don't actually use it, we decode the HEVC using the decoder.
@@ -132,9 +132,9 @@ def png_to_hevc(in_png, quality, out_hevc):
 # This means we need to have dimensions passed in.
 def hevc_to_png(in_hevc, width, height, out_png):
   hevc_yuv = path_for_file_in_tmp(in_hevc) + ".yuv"
-  cmd = "%s -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
+  cmd = "%s -d 8 -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
   run_silent(cmd)
-  cmd = "%s -size %ix%i -depth 8 -sampling-factor 4:2:0 %s %s" % (convert, width, height, hevc_yuv, out_png)
+  cmd = "%s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s %s" % (convert, width, height, hevc_yuv, out_png)
   run_silent(cmd)
   os.remove(hevc_yuv)
 
