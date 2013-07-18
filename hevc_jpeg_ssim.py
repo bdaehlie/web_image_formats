@@ -12,15 +12,17 @@ import test_utils
 def get_hevc_results(in_png, hevc_q):
   tmp_file_base = test_utils.path_for_file_in_tmp(in_png)
   hevc = tmp_file_base + str(hevc_q) + ".hevc"
-  test_utils.png_to_hevc(in_png, hevc_q, hevc)
+  hevc_yuv = hevc + ".yuv"
+  test_utils.png_to_hevc(in_png, hevc_q, hevc, hevc_yuv)
   hevc_png = hevc + ".png"
-  test_utils.hevc_to_png(hevc, test_utils.get_png_width(in_png), test_utils.get_png_height(in_png), hevc_png)
+  test_utils.hevc_yuv_to_png(hevc_yuv, test_utils.get_png_width(in_png), test_utils.get_png_height(in_png), hevc_png)
   ssim = test_utils.ssim_float_for_images(in_png, hevc_png)
   file_size = os.path.getsize(hevc)
   file_size += 80 # Penalize HEVC bit streams for not having a container like
                   # other formats do. Came up with this number because a
                   # 1x1 pixel hevc file is 84 bytes.
   os.remove(hevc)
+  os.remove(hevc_yuv)
   os.remove(hevc_png)
   return (ssim, file_size)
 

@@ -13,7 +13,6 @@ cwebp = "/Users/josh/src/image-formats/libwebp-0.3.1/examples/cwebp"
 dwebp = "/Users/josh/src/image-formats/libwebp-0.3.1/examples/dwebp"
 convert = "/opt/local/bin/convert"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
-dhevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppDecoderStatic"
 cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
 djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
 
@@ -88,28 +87,19 @@ def get_png_height(png_path):
   proc = os.popen(cmd, "r")
   return int(proc.readline().strip())
 
-def png_to_hevc(in_png, quality, out_hevc):
+def png_to_hevc(in_png, quality, out_hevc, out_hevc_yuv):
   png_width = get_png_width(in_png)
   png_height = get_png_height(in_png)
   png_yuv = path_for_file_in_tmp(in_png) + ".yuv"
   cmd = "%s %s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s" % (convert, in_png, png_width, png_height, png_yuv)
   run_silent(cmd)
-  yuv_rec = png_yuv + ".rec.yuv" # HEVC encoder outputs a reconstructed YUV file, which we need to put in the tmp dir.
-                                 # We don't actually use it, we decode the HEVC using the decoder.
-  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, png_width, png_height, quality, png_yuv, out_hevc, yuv_rec)
+  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, png_width, png_height, quality, png_yuv, out_hevc, out_hevc_yuv)
   run_silent(cmd)
   os.remove(png_yuv)
-  os.remove(yuv_rec)
 
-# HEVC files are just bitstreams with no meta-data.
-# This means we need to have dimensions passed in.
-def hevc_to_png(in_hevc, width, height, out_png):
-  hevc_yuv = path_for_file_in_tmp(in_hevc) + ".yuv"
-  cmd = "%s -d 8 -b %s -o %s" % (dhevc, in_hevc, hevc_yuv)
+def hevc_yuv_to_png(in_hevc_yuv, width, height, out_png):
+  cmd = "%s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s %s" % (convert, width, height, in_hevc_yuv, out_png)
   run_silent(cmd)
-  cmd = "%s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s %s" % (convert, width, height, hevc_yuv, out_png)
-  run_silent(cmd)
-  os.remove(hevc_yuv)
 
 def jxr_to_png(in_jxr, out_png):
   jxr_bmp = path_for_file_in_tmp(in_jxr) + ".bmp"
