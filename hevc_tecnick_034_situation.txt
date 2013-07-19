@@ -1,40 +1,12 @@
 The way the test scripts work is that they find two images in the target format the straddle the JPEG quality metric (e.g. SSIM). The interpolation is used to calculate a file size. This requires the target format to be capable of producing an image that has a higher quality metric value than the JPEG.
 
-In running 'hevc_jpeg_ssim.py' at 'q=95' and 'image=images/tecnick/RGB_OR_1200x1200_034.png', I found that HEVC was unable to match the SSIM value produced by a JPEG at quality 95. Furthermore, HEVC did not neccessarily produce SSIM values that went down as the HEVC quality value went down.
+In running 'hevc_jpeg_ssim.py' at 'q=95' and 'image=images/tecnick/RGB_OR_1200x1200_034.png', I found that HEVC was unable to match the SSIM value produced by a JPEG at quality 95.
 
 [josh@saturn web_image_formats] ./hevc_jpeg_ssim.py 95 images/tecnick/RGB_OR_1200x1200_034.png 
-JPEG SSIM: 0.986128, HEVC-P SSIM: 0.985655
+JPEG SSIM: 0.986128, HEVC-P SSIM: 0.984821
 Target format cannot match JPEG quality, aborting!
 
-See HEVC SSIM values:
-
-(highest to lower quality)
-HEVC SSIM: 0.985654666667
-HEVC SSIM: 0.985675333333
-HEVC SSIM: 0.985643
-HEVC SSIM: 0.985588333333
-HEVC SSIM: 0.985072
-HEVC SSIM: 0.984988666667
-
-No such problem with WebP and JPEG-XR:
-
-(highest to lower quality)
-JPEG-XR SSIM: 0.990496333333
-JPEG-XR SSIM: 0.990240666667
-JPEG-XR SSIM: 0.988912
-JPEG-XR SSIM: 0.987634
-JPEG-XR SSIM: 0.987298333333
-JPEG-XR SSIM: 0.985083666667
-
-(highest to lower quality)
-JPEG-XR SSIM: 0.998127333333
-JPEG-XR SSIM: 0.997157666667
-JPEG-XR SSIM: 0.995987666667
-JPEG-XR SSIM: 0.995115
-JPEG-XR SSIM: 0.994260333333
-JPEG-XR SSIM: 0.994152
-
-None of these problems occurred in images other than tecnick 034. Looking at the 034 image, it's very dark all around, very little complexity/structure compared to others. This could be messing with HEVC or SSIM, not sure which.
+This problem does not occur in images other than tecnick 034. Looking at the 034 image, it's very dark all around, very little complexity/structure compared to others. This could be messing with HEVC or SSIM, not sure which.
 
 The solution I chose to implement is that so long as the SSIM difference is small (< 0.001) we'll just charge the image format in question with the largest file it produces, the file with the close SSIM value.
 
