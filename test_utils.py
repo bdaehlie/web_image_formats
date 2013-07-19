@@ -17,7 +17,7 @@ cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
 djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
 
 # HEVC config file
-hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_randomaccess_main.cfg"
+hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
@@ -93,7 +93,7 @@ def png_to_hevc(in_png, quality, out_hevc, out_hevc_yuv):
   png_yuv = path_for_file_in_tmp(in_png) + ".yuv"
   cmd = "%s %s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s" % (convert, in_png, png_width, png_height, png_yuv)
   run_silent(cmd)
-  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 500 -b %s -o %s" % (chevc, hevc_config, png_width, png_height, quality, png_yuv, out_hevc, out_hevc_yuv)
+  cmd = "%s -c %s -wdt %i -hgt %i -aq 1 --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 1 -b %s -o %s" % (chevc, hevc_config, png_width, png_height, quality, png_yuv, out_hevc, out_hevc_yuv)
   run_silent(cmd)
   os.remove(png_yuv)
 
