@@ -88,17 +88,15 @@ def get_png_height(png_path):
   return int(proc.readline().strip())
 
 def png_to_hevc(in_png, quality, out_hevc, out_hevc_yuv):
-  png_width = get_png_width(in_png)
-  png_height = get_png_height(in_png)
   png_yuv = path_for_file_in_tmp(in_png) + ".yuv"
-  cmd = "%s %s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s" % (convert, in_png, png_width, png_height, png_yuv)
+  cmd = "%s %s -set colorspace RGB -sampling-factor 4:2:0 %s" % (convert, in_png, png_yuv)
   run_silent(cmd)
-  cmd = "%s -c %s -wdt %i -hgt %i --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 1 -b %s -o %s" % (chevc, hevc_config, png_width, png_height, quality, png_yuv, out_hevc, out_hevc_yuv)
+  cmd = "%s -c %s -wdt %i -hgt %i --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 1 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, png_yuv, out_hevc, out_hevc_yuv)
   run_silent(cmd)
   os.remove(png_yuv)
 
 def hevc_yuv_to_png(in_hevc_yuv, width, height, out_png):
-  cmd = "%s -size %ix%i -depth 8 -colorspace sRGB -sampling-factor 4:2:0 %s %s" % (convert, width, height, in_hevc_yuv, out_png)
+  cmd = "%s -size %ix%i -depth 8 -sampling-factor 4:2:0 %s -colorspace RGB -define png:exclude-chunk=gAMA %s" % (convert, width, height, in_hevc_yuv, out_png)
   run_silent(cmd)
 
 def jxr_to_png(in_jxr, out_png):

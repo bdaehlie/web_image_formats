@@ -69,16 +69,9 @@ def main(argv):
       high_index = i
       high_results = hevc_results
 
-  # See 'hevc_tecnick_034_situation.txt' for explanation of the
-  # following code.
   if low_index == -1 or high_index == len(possible_q):
-    if low_index == -1 and (high_results[0] - jpeg_ssim) < 0.001:
-      low_results = high_results
-    elif high_index == len(possible_q) and (jpeg_ssim - low_results[0]) < 0.001:
-      high_results = low_results
-    else:
-      sys.stderr.write("Failure: Unsuccessful binary search!\n")
-      sys.exit(1)
+    sys.stderr.write("Failure: Unsuccessful binary search!\n")
+    sys.exit(1)
 
   # Calculate file size via interpolation.
   hevc_file_size = test_utils.file_size_interpolate(high_results[0], low_results[0], jpeg_ssim, high_results[1], low_results[1])
