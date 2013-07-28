@@ -96,14 +96,14 @@ def get_jpeg_results(in_png, jpeg_q):
   cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, png_yuv)
   run_silent(cmd)
   yuv_jpg = png_yuv + ".jpg"
-  cmd = "%s %i 512x512 %s %s" % (yuvjpeg, jpeg_q, png_yuv, yuv_jpg)
+  cmd = "%s %i %ix%i %s %s" % (yuvjpeg, jpeg_q, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_jpg)
   run_silent(cmd)
   jpeg_file_size = os.path.getsize(yuv_jpg)
   jpg_yuv = yuv_jpg + ".yuv"
   cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, yuv_jpg, jpg_yuv)
   run_silent(cmd)
   yuv_png = jpg_yuv + ".png"
-  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size 512x512 %s %s" % (convert, jpg_yuv, yuv_png)
+  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size %ix%i %s %s" % (convert, get_png_width(in_png), get_png_height(in_png), jpg_yuv, yuv_png)
   run_silent(cmd)
   jpeg_ssim = ssim_float_for_images(in_png, yuv_png)
   os.remove(png_yuv)
@@ -119,14 +119,14 @@ def get_webp_results(in_png, webp_q):
   cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, png_yuv)
   run_silent(cmd)
   yuv_webp = png_yuv + ".webp"
-  cmd = "%s %i 512x512 %s %s" % (yuvwebp, webp_q, png_yuv, yuv_webp)
+  cmd = "%s %i %ix%i %s %s" % (yuvwebp, webp_q, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_webp)
   run_silent(cmd)
   webp_file_size = os.path.getsize(yuv_webp)
   webp_yuv = yuv_webp + ".yuv"
   cmd = "%s %s %s" % (webpyuv, yuv_webp, webp_yuv)
   run_silent(cmd)
   yuv_png = webp_yuv + ".png"
-  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size 512x512 %s %s" % (convert, webp_yuv, yuv_png)
+  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size %ix%i %s %s" % (convert, get_png_width(in_png), get_png_height(in_png), webp_yuv, yuv_png)
   run_silent(cmd)
   webp_ssim = ssim_float_for_images(in_png, yuv_png)
   os.remove(png_yuv)
