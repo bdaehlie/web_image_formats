@@ -52,15 +52,29 @@ int main(int argc, char *argv[]) {
   }
 
   errno = 0;
+
   long quality = strtol(argv[1], NULL, 10);
   if (errno != 0 || quality < 0 || quality > 100) {
     fprintf(stderr, "Invalid JPEG quality value!\n");
     return 1;
   }
 
-  /* TODO: actually read and validate size input */
-  long width = 512;
-  long height = 512;
+  const char *size = argv[2];
+  char *x = strchr(size, 'x');
+  if (!x && x != size && x != (x + strlen(x) - 1)) {
+    fprintf(stderr, "Invalid image size input!\n");
+    return 1;
+  }
+  long width = strtol(size, NULL, 10);
+  if (errno != 0) {
+    fprintf(stderr, "Invalid image size input!\n");
+    return 1;
+  }
+  long height = strtol(x + 1, NULL, 10);
+  if (errno != 0) {
+    fprintf(stderr, "Invalid image size input!\n");
+    return 1;
+  }
 
   /* Will check these for validity when opening via 'fopen'. */
   const char *yuv_path = argv[3];

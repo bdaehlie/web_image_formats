@@ -24,7 +24,7 @@ def get_jxr_results(in_png, jxr_q):
 def main(argv):
   if len(argv) < 2:
     print "First arg is a JPEG quality value to test (e.g. '75')."
-    print "Second arg is the path to an image to test (e.g. 'images/Lenna.jpg')."
+    print "Second arg is the path to an image to test (e.g. 'images/Lenna.png')."
     print "Output is four lines: SSIM, JPEG-XR file size, JPEG file size, and JPEG-XR to JPEG file size ratio."
     print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
     return

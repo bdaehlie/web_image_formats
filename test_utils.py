@@ -7,14 +7,13 @@ import sys
 
 # Paths to various programs used by the tests.
 ssim = "/Users/josh/src/image-formats/SSIM/ssim"
-cjpeg = "/opt/local/bin/cjpeg -optimize"
-djpeg = "/opt/local/bin/djpeg"
-cwebp = "/Users/josh/src/image-formats/libwebp-0.3.1/examples/cwebp"
-dwebp = "/Users/josh/src/image-formats/libwebp-0.3.1/examples/dwebp"
+yuvjpeg = "/Users/josh/src/image-formats/web_image_formats/encoders/yuvjpeg"
 convert = "/opt/local/bin/convert"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
 cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
 djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
+yuvwebp = "/Users/josh/src/image-formats/web_image_formats/encoders/yuvwebp"
+webpyuv = "/Users/josh/src/image-formats/web_image_formats/decoders/webpyuv"
 
 # HEVC config file
 hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
@@ -45,30 +44,6 @@ def ssim_float_for_images(img1_path, img2_path):
 # the same file in the tmp dir.
 def path_for_file_in_tmp(in_path):
   return tmpdir + str(os.getpid()) + os.path.basename(in_path)
-
-def png_to_webp(in_png, quality, out_webp):
-  cmd = "%s -quiet -q %d %s -o %s" % (cwebp, quality, in_png, out_webp)
-  run_silent(cmd)
-
-def webp_to_png(in_webp, out_png):
-  cmd = "%s %s -o %s" % (dwebp, in_webp, out_png)
-  run_silent(cmd)
-
-def png_to_jpeg(in_png, quality, out_jpeg):
-  png_ppm = path_for_file_in_tmp(in_png) + ".ppm"
-  cmd = "%s %s %s" % (convert, in_png, png_ppm)
-  run_silent(cmd)
-  cmd = "%s -quality %d -outfile %s %s" % (cjpeg, quality, out_jpeg, png_ppm)
-  run_silent(cmd)
-  os.remove(png_ppm)
-
-def jpeg_to_png(in_jpeg, out_png):
-  jpg_ppm = path_for_file_in_tmp(in_jpeg) + ".ppm"
-  cmd = "%s -outfile %s %s" % (djpeg, jpg_ppm, in_jpeg)
-  run_silent(cmd)
-  cmd = "%s %s %s" % (convert, jpg_ppm, out_png)
-  run_silent(cmd)
-  os.remove(jpg_ppm)
 
 # Returns file size at particular SSIM via interpolation.
 def file_size_interpolate(ssim_high, ssim_low, ssim_value, file_size_high, file_size_low):
@@ -117,12 +92,63 @@ def png_to_jxr(in_png, quality, out_jxr):
 
 def get_jpeg_results(in_png, jpeg_q):
   tmp_file_base = path_for_file_in_tmp(in_png)
-  jpg = tmp_file_base + str(jpeg_q) + ".jpg"
-  png_to_jpeg(in_png, jpeg_q, jpg)
-  jpeg_file_size = os.path.getsize(jpg)
-  jpg_png = jpg + ".png"
-  jpeg_to_png(jpg, jpg_png)
-  jpeg_ssim = ssim_float_for_images(in_png, jpg_png)
-  os.remove(jpg)
-  os.remove(jpg_png)
+  png_yuv = tmp_file_base + str(jpeg_q) + ".yuv"
+  cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, png_yuv)
+  run_silent(cmd)
+  yuv_jpg = png_yuv + ".jpg"
+  cmd = "%s %i 512x512 %s %s" % (yuvjpeg, jpeg_q, png_yuv, yuv_jpg)
+  run_silent(cmd)
+  jpeg_file_size = os.path.getsize(yuv_jpg)
+  jpg_yuv = yuv_jpg + ".yuv"
+  cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, yuv_jpg, jpg_yuv)
+  run_silent(cmd)
+  yuv_png = jpg_yuv + ".png"
+  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size 512x512 %s %s" % (convert, jpg_yuv, yuv_png)
+  run_silent(cmd)
+  jpeg_ssim = ssim_float_for_images(in_png, yuv_png)
+  os.remove(png_yuv)
+  os.remove(yuv_jpg)
+  os.remove(jpg_yuv)
+  os.remove(yuv_png)
   return (jpeg_ssim, jpeg_file_size)
+
+# Returns an SSIM value and a file size
+def get_webp_results(in_png, webp_q):
+  tmp_file_base = path_for_file_in_tmp(in_png)
+  png_yuv = tmp_file_base + str(webp_q) + ".yuv"
+  cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, png_yuv)
+  run_silent(cmd)
+  yuv_webp = png_yuv + ".webp"
+  cmd = "%s %i 512x512 %s %s" % (yuvwebp, webp_q, png_yuv, yuv_webp)
+  run_silent(cmd)
+  webp_file_size = os.path.getsize(yuv_webp)
+  webp_yuv = yuv_webp + ".yuv"
+  cmd = "%s %s %s" % (webpyuv, yuv_webp, webp_yuv)
+  run_silent(cmd)
+  yuv_png = webp_yuv + ".png"
+  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size 512x512 %s %s" % (convert, webp_yuv, yuv_png)
+  run_silent(cmd)
+  webp_ssim = ssim_float_for_images(in_png, yuv_png)
+  os.remove(png_yuv)
+  os.remove(yuv_webp)
+  os.remove(webp_yuv)
+  os.remove(yuv_png)
+  return (webp_ssim, webp_file_size)
+
+# Returns an SSIM value and a file size
+def get_hevc_results(in_png, hevc_q):
+  tmp_file_base = path_for_file_in_tmp(in_png)
+  hevc = tmp_file_base + str(hevc_q) + ".hevc"
+  hevc_yuv = hevc + ".yuv"
+  png_to_hevc(in_png, hevc_q, hevc, hevc_yuv)
+  hevc_png = hevc + ".png"
+  hevc_yuv_to_png(hevc_yuv, get_png_width(in_png), get_png_height(in_png), hevc_png)
+  ssim = ssim_float_for_images(in_png, hevc_png)
+  file_size = os.path.getsize(hevc)
+  file_size += 80 # Penalize HEVC bit streams for not having a container like
+                  # other formats do. Came up with this number because a
+                  # 1x1 pixel hevc file is 84 bytes.
+  os.remove(hevc)
+  os.remove(hevc_yuv)
+  os.remove(hevc_png)
+  return (ssim, file_size)
