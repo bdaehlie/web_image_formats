@@ -62,18 +62,6 @@ def get_png_height(png_path):
   proc = os.popen(cmd, "r")
   return int(proc.readline().strip())
 
-def png_to_hevc(in_png, quality, out_hevc, out_hevc_yuv):
-  png_yuv = path_for_file_in_tmp(in_png) + ".yuv"
-  cmd = "%s %s -set colorspace RGB -sampling-factor 4:2:0 %s" % (convert, in_png, png_yuv)
-  run_silent(cmd)
-  cmd = "%s -c %s -wdt %i -hgt %i --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 1 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, png_yuv, out_hevc, out_hevc_yuv)
-  run_silent(cmd)
-  os.remove(png_yuv)
-
-def hevc_yuv_to_png(in_hevc_yuv, width, height, out_png):
-  cmd = "%s -size %ix%i -depth 8 -sampling-factor 4:2:0 %s -colorspace RGB -define png:exclude-chunk=gAMA %s" % (convert, width, height, in_hevc_yuv, out_png)
-  run_silent(cmd)
-
 def jxr_to_png(in_jxr, out_png):
   jxr_bmp = path_for_file_in_tmp(in_jxr) + ".bmp"
   cmd = "%s -i %s -o %s" % (djxr, in_jxr, jxr_bmp)
@@ -90,13 +78,13 @@ def png_to_jxr(in_png, quality, out_jxr):
   run_silent(cmd)
   os.remove(png_bmp)
 
-def get_jpeg_results(in_png, jpeg_q):
+def get_jpeg_results(in_png, quality):
   tmp_file_base = path_for_file_in_tmp(in_png)
-  png_yuv = tmp_file_base + str(jpeg_q) + ".yuv"
+  png_yuv = tmp_file_base + str(quality) + ".yuv"
   cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, png_yuv)
   run_silent(cmd)
   yuv_jpg = png_yuv + ".jpg"
-  cmd = "%s %i %ix%i %s %s" % (yuvjpeg, jpeg_q, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_jpg)
+  cmd = "%s %i %ix%i %s %s" % (yuvjpeg, quality, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_jpg)
   run_silent(cmd)
   jpeg_file_size = os.path.getsize(yuv_jpg)
   jpg_yuv = yuv_jpg + ".yuv"
@@ -113,13 +101,13 @@ def get_jpeg_results(in_png, jpeg_q):
   return (jpeg_ssim, jpeg_file_size)
 
 # Returns an SSIM value and a file size
-def get_webp_results(in_png, webp_q):
+def get_webp_results(in_png, quality):
   tmp_file_base = path_for_file_in_tmp(in_png)
-  png_yuv = tmp_file_base + str(webp_q) + ".yuv"
+  png_yuv = tmp_file_base + str(quality) + ".yuv"
   cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, png_yuv)
   run_silent(cmd)
   yuv_webp = png_yuv + ".webp"
-  cmd = "%s %i %ix%i %s %s" % (yuvwebp, webp_q, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_webp)
+  cmd = "%s %i %ix%i %s %s" % (yuvwebp, quality, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_webp)
   run_silent(cmd)
   webp_file_size = os.path.getsize(yuv_webp)
   webp_yuv = yuv_webp + ".yuv"
@@ -136,19 +124,25 @@ def get_webp_results(in_png, webp_q):
   return (webp_ssim, webp_file_size)
 
 # Returns an SSIM value and a file size
-def get_hevc_results(in_png, hevc_q):
+def get_hevc_results(in_png, quality):
   tmp_file_base = path_for_file_in_tmp(in_png)
-  hevc = tmp_file_base + str(hevc_q) + ".hevc"
-  hevc_yuv = hevc + ".yuv"
-  png_to_hevc(in_png, hevc_q, hevc, hevc_yuv)
-  hevc_png = hevc + ".png"
-  hevc_yuv_to_png(hevc_yuv, get_png_width(in_png), get_png_height(in_png), hevc_png)
-  ssim = ssim_float_for_images(in_png, hevc_png)
-  file_size = os.path.getsize(hevc)
-  file_size += 80 # Penalize HEVC bit streams for not having a container like
-                  # other formats do. Came up with this number because a
-                  # 1x1 pixel hevc file is 84 bytes.
-  os.remove(hevc)
+  png_yuv = tmp_file_base + str(quality) + ".yuv"
+  cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, png_yuv)
+  run_silent(cmd)
+  yuv_hevc = png_yuv + ".hevc"
+  hevc_yuv = yuv_hevc + ".yuv"
+  cmd = "%s -c %s -wdt %i -hgt %i --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 1 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, png_yuv, yuv_hevc, hevc_yuv)
+  run_silent(cmd)
+  hevc_file_size = os.path.getsize(yuv_hevc)
+  hevc_file_size += 80 # Penalize HEVC bit streams for not having a container like
+                       # other formats do. Came up with this number because a
+                       # 1x1 pixel hevc file is 84 bytes.
+  yuv_png = hevc_yuv + ".png"
+  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size %ix%i %s %s" % (convert, get_png_width(in_png), get_png_height(in_png), hevc_yuv, yuv_png)
+  run_silent(cmd)
+  hevc_ssim = ssim_float_for_images(in_png, yuv_png)
+  os.remove(png_yuv)
+  os.remove(yuv_hevc)
   os.remove(hevc_yuv)
-  os.remove(hevc_png)
-  return (ssim, file_size)
+  os.remove(yuv_png)
+  return (hevc_ssim, hevc_file_size)
