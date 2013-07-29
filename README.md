@@ -3,9 +3,8 @@ This is a test suite assembled to test various lossy image formats. Right now it
 This suite was created and is maintained on OS X. It can probably work on Linux with minimal tweaking.
 
 Requirements:
-* opencv (install via MacPorts)
-* svn://hevc.kw.bbc.co.uk/svn/jctvc-hm (HEVC-P encoder/decoder)
-* https://jxrlib.codeplex.com/releases (JPEG-XR encoder/decoder)
-* https://developers.google.com/speed/webp/download (WebP encoder/decoder)
-* ImageMagick (install via MacPorts)
+* svn://hevc.kw.bbc.co.uk/svn/jctvc-hm (HEVC)
+* https://jxrlib.codeplex.com/releases (JPEG-XR)
+* https://developers.google.com/speed/webp/download (WebP)
+* ImageMagick, http://www.imagemagick.org/
 * http://mehdi.rabah.free.fr/SSIM/ (C++ SSIM evaluation)
