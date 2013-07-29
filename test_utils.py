@@ -29,22 +29,30 @@
 import os
 import subprocess
 import sys
+import math
 
 # Paths to various programs used by the tests.
-ssim = "/Users/josh/src/image-formats/SSIM/ssim"
-yuvjpeg = "/Users/josh/src/image-formats/web_image_formats/encoders/yuvjpeg"
+yuvjpeg = "./encoders/yuvjpeg"
+yuvwebp = "./encoders/yuvwebp"
+webpyuv = "./decoders/webpyuv"
 convert = "/opt/local/bin/convert"
+ssim = "/Users/josh/src/image-formats/SSIM/ssim"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
 cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
 djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
-yuvwebp = "/Users/josh/src/image-formats/web_image_formats/encoders/yuvwebp"
-webpyuv = "/Users/josh/src/image-formats/web_image_formats/decoders/webpyuv"
 
 # HEVC config file
 hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
+
+def print_help():
+  print "First arg is a JPEG quality value to test (e.g. '75')."
+  print "Second arg is the path to an image to test (e.g. 'images/Lenna.png')."
+  print "Output is four lines: SSIM, target format file size, JPEG file size, and target format to JPEG file size ratio."
+  print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
+  return
 
 # Run a subprocess with silent non-error output
 def run_silent(cmd):
@@ -102,6 +110,31 @@ def png_to_jxr(in_png, quality, out_jxr):
   cmd = "%s -i %s -o %s -q %f" % (cjxr, png_bmp, out_jxr, quality)
   run_silent(cmd)
   os.remove(png_bmp)
+
+def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
+  low_index = -1
+  low_results = (0.0, 0)
+  high_index = len(quality_list)
+  high_results = (0.0, 0)
+  while (high_index - low_index) > 1:
+    i = int(math.floor((float(high_index - low_index) / 2.0)) + low_index)
+    results = results_function(png, quality_list[i])
+    webp_ssim = results[0]
+    webp_file_size = results[1]
+    if webp_ssim == jpg_ssim:
+      low_index = high_index = i
+      low_results = high_results = results
+      break;
+    if webp_ssim < jpg_ssim:
+      low_index = i
+      low_results = results
+    if webp_ssim > jpg_ssim:
+      high_index = i
+      high_results = results
+  if low_index == -1 or high_index == len(quality_list):
+    sys.stderr.write("Failure: Unsuccessful binary search!\n")
+    sys.exit(1)
+  return file_size_interpolate(high_results[0], low_results[0], jpg_ssim, high_results[1], low_results[1]);
 
 def png_to_yuv(in_png, out_yuv):
   cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, out_yuv)

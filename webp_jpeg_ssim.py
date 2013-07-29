@@ -30,15 +30,11 @@
 import os
 import sys
 import time
-import math
 import test_utils
 
 def main(argv):
-  if len(argv) < 2:
-    print "First arg is a JPEG quality value to test (e.g. '75')."
-    print "Second arg is the path to an image to test (e.g. 'images/Lenna.png')."
-    print "Output is four lines: SSIM, WebP file size, JPEG file size, and WebP to JPEG file size ratio."
-    print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
+  if len(argv) != 3:
+    test_utils.print_help()
     return
 
   jpeg_q = int(argv[1])
@@ -56,32 +52,7 @@ def main(argv):
     possible_q.append(q)
     q += 1
 
-  low_index = -1
-  low_results = (0.0, 0)
-  high_index = len(possible_q)
-  high_results = (0.0, 0)
-  while (high_index - low_index) > 1:
-    i = int(math.floor((float(high_index - low_index) / 2.0)) + low_index)
-    webp_results = test_utils.get_webp_results(png, possible_q[i])
-    webp_ssim = webp_results[0]
-    webp_file_size = webp_results[1]
-    if webp_ssim == jpeg_ssim:
-      low_index = high_index = i
-      low_results = high_results = webp_results
-      break;
-    if webp_ssim < jpeg_ssim:
-      low_index = i
-      low_results = webp_results
-    if webp_ssim > jpeg_ssim:
-      high_index = i
-      high_results = webp_results
-
-  if low_index == -1 or high_index == len(possible_q):
-    sys.stderr.write("Failure: Unsuccessful binary search!\n")
-    sys.exit(1)
-
-  # Calculate file size via interpolation.
-  webp_file_size = test_utils.file_size_interpolate(high_results[0], low_results[0], jpeg_ssim, high_results[1], low_results[1])
+  webp_file_size = test_utils.find_file_size_for_ssim(test_utils.get_webp_results, png, possible_q, jpeg_ssim)
 
   ratio = float(webp_file_size) / float(jpeg_file_size)
 
