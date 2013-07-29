@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Written by Josh Aas
 # Copyright (c) 2013, Mozilla Corporation
 # All rights reserved.
@@ -46,13 +47,6 @@ hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_intra_ma
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
-
-def print_help():
-  print "First arg is a JPEG quality value to test (e.g. '75')."
-  print "Second arg is the path to an image to test (e.g. 'images/Lenna.png')."
-  print "Output is four lines: SSIM, target format file size, JPEG file size, and target format to JPEG file size ratio."
-  print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
-  return
 
 # Run a subprocess with silent non-error output
 def run_silent(cmd):
@@ -206,3 +200,66 @@ def get_hevc_results(in_png, quality):
   os.remove(hevc_yuv)
   os.remove(yuv_png)
   return (hevc_ssim, hevc_file_size)
+
+def quality_list_for_format(format):
+  possible_q = []
+  if format == 'hevc':
+    q = 50
+    while q >= 0.0:
+      possible_q.append(q)
+      q -= 0.5
+    return possible_q
+  if format == 'webp':
+    q = 0
+    while q < 101:
+      possible_q.append(q)
+      q += 1
+    return possible_q
+  sys.stderr.write("Can't find quality list for format!\n")
+  sys.exit(rv)
+
+def results_function_for_format(format):
+  if format == 'hevc':
+    return get_hevc_results;
+  if format == 'webp':
+    return get_webp_results;
+  sys.stderr.write("Can't find results function for format!\n")
+  sys.exit(rv)
+
+# Each format is a tuple with name and associated functions
+supported_formats = ['webp', 'hevc']
+
+def main(argv):
+  if len(argv) != 4:
+    print "First arg is format to test %s" % (supported_formats)
+    print "Second arg is a JPEG quality value to test (e.g. '75')."
+    print "Third arg is the path to an image to test (e.g. 'images/Lenna.png')."
+    print "Output is four lines: SSIM, target format file size, JPEG file size, and target format to JPEG file size ratio."
+    print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
+    return
+
+  format_name = argv[1]
+  if format_name not in supported_formats:
+    print "Image format not supported!"
+    return
+  quality_list = quality_list_for_format(format_name)
+  results_function = results_function_for_format(format_name)
+
+  jpg_q = int(argv[2])
+  png = argv[3]
+
+  jpg_results = get_jpeg_results(png, jpg_q)
+  jpg_ssim = jpg_results[0]
+  jpg_file_size = jpg_results[1]
+
+  file_size = find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim)
+
+  ratio = float(file_size) / float(jpg_file_size)
+
+  print "SSIM: " + str(jpg_ssim)[:5]
+  print "%s_File_Size_(kb): %.1f" % (format_name, float(file_size) / 1024.0)
+  print "jpeg_File_Size_(kb): %.1f" % (float(jpg_file_size) / 1024.0)
+  print "WebP_to_JPEG_File_Size_Ratio: %.2f" % (ratio)
+
+if __name__ == "__main__":
+  main(sys.argv)
