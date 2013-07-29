@@ -49,7 +49,7 @@ def main(argv):
   jpeg_file_size_total = 0.0 # This is in KB
   tformat_file_size_total = 0.0 # This is in KB
   for i in test_images:
-    output = subprocess.Popen(["./run_test.py", format_name, str(jpeg_q), i], stdout=subprocess.PIPE).communicate()[0]
+    output = subprocess.Popen(["./compression_test.py", format_name, str(jpeg_q), i], stdout=subprocess.PIPE).communicate()[0]
     lines = output.splitlines(False)
     i = 0
     for line in lines:
