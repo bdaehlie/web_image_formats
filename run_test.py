@@ -89,22 +89,6 @@ def get_png_height(png_path):
   proc = os.popen(cmd, "r")
   return int(proc.readline().strip())
 
-def jxr_to_png(in_jxr, out_png):
-  jxr_bmp = path_for_file_in_tmp(in_jxr) + ".bmp"
-  cmd = "%s -i %s -o %s" % (djxr, in_jxr, jxr_bmp)
-  run_silent(cmd)
-  cmd = "%s %s %s" % (convert, jxr_bmp, out_png)
-  run_silent(cmd)
-  os.remove(jxr_bmp)
-
-def png_to_jxr(in_png, quality, out_jxr):
-  png_bmp = path_for_file_in_tmp(in_png) + ".bmp"
-  cmd = "%s %s %s" % (convert, in_png, png_bmp)
-  run_silent(cmd)
-  cmd = "%s -i %s -o %s -q %f" % (cjxr, png_bmp, out_jxr, quality)
-  run_silent(cmd)
-  os.remove(png_bmp)
-
 def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
   low_index = -1
   low_results = (0.0, 0)
@@ -118,7 +102,7 @@ def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
     if webp_ssim == jpg_ssim:
       low_index = high_index = i
       low_results = high_results = results
-      break;
+      break
     if webp_ssim < jpg_ssim:
       low_index = i
       low_results = results
@@ -128,7 +112,7 @@ def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
   if low_index == -1 or high_index == len(quality_list):
     sys.stderr.write("Failure: Unsuccessful binary search!\n")
     sys.exit(1)
-  return file_size_interpolate(high_results[0], low_results[0], jpg_ssim, high_results[1], low_results[1]);
+  return file_size_interpolate(high_results[0], low_results[0], jpg_ssim, high_results[1], low_results[1])
 
 def png_to_yuv(in_png, out_yuv):
   cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, out_yuv)
@@ -139,8 +123,7 @@ def yuv_to_png(in_yuv, width, height, out_png):
   run_silent(cmd)
 
 def get_jpeg_results(in_png, quality):
-  tmp_file_base = path_for_file_in_tmp(in_png)
-  png_yuv = tmp_file_base + str(quality) + ".yuv"
+  png_yuv = path_for_file_in_tmp(in_png) + str(quality) + ".yuv"
   png_to_yuv(in_png, png_yuv)
   yuv_jpg = png_yuv + ".jpg"
   cmd = "%s %i %ix%i %s %s" % (yuvjpeg, quality, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_jpg)
@@ -160,8 +143,7 @@ def get_jpeg_results(in_png, quality):
 
 # Returns an SSIM value and a file size
 def get_webp_results(in_png, quality):
-  tmp_file_base = path_for_file_in_tmp(in_png)
-  png_yuv = tmp_file_base + str(quality) + ".yuv"
+  png_yuv = path_for_file_in_tmp(in_png) + str(quality) + ".yuv"
   png_to_yuv(in_png, png_yuv)
   yuv_webp = png_yuv + ".webp"
   cmd = "%s %i %ix%i %s %s" % (yuvwebp, quality, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_webp)
@@ -181,8 +163,7 @@ def get_webp_results(in_png, quality):
 
 # Returns an SSIM value and a file size
 def get_hevc_results(in_png, quality):
-  tmp_file_base = path_for_file_in_tmp(in_png)
-  png_yuv = tmp_file_base + str(quality) + ".yuv"
+  png_yuv = path_for_file_in_tmp(in_png) + str(quality) + ".yuv"
   png_to_yuv(in_png, png_yuv)
   yuv_hevc = png_yuv + ".hevc"
   hevc_yuv = yuv_hevc + ".yuv"
@@ -201,6 +182,28 @@ def get_hevc_results(in_png, quality):
   os.remove(yuv_png)
   return (hevc_ssim, hevc_file_size)
 
+#TODO: Make this use YUV input like everything else
+def get_jxr_results(in_png, quality):
+  png_bmp = path_for_file_in_tmp(in_png) + str(quality) + ".bmp"
+  cmd = "%s %s %s" % (convert, in_png, png_bmp)
+  run_silent(cmd)
+  bmp_jxr = png_bmp + ".jxr"
+  cmd = "%s -i %s -o %s -q %f" % (cjxr, png_bmp, bmp_jxr, quality)
+  run_silent(cmd)
+  jxr_file_size = os.path.getsize(bmp_jxr)
+  jxr_bmp = bmp_jxr + ".bmp"
+  cmd = "%s -i %s -o %s" % (djxr, bmp_jxr, jxr_bmp)
+  run_silent(cmd)
+  bmp_png = jxr_bmp + ".png"
+  cmd = "%s %s %s" % (convert, jxr_bmp, bmp_png)
+  run_silent(cmd)
+  ssim = ssim_float_for_images(in_png, bmp_png)
+  os.remove(png_bmp)
+  os.remove(bmp_jxr)
+  os.remove(jxr_bmp)
+  os.remove(bmp_png)
+  return (ssim, jxr_file_size)
+
 def quality_list_for_format(format):
   possible_q = []
   if format == 'hevc':
@@ -215,19 +218,27 @@ def quality_list_for_format(format):
       possible_q.append(q)
       q += 1
     return possible_q
+  if format == 'jxr':
+    q = 0.0
+    while q < 1.0:
+      possible_q.append(q)
+      q += 0.01
+    return possible_q
   sys.stderr.write("Can't find quality list for format!\n")
   sys.exit(rv)
 
 def results_function_for_format(format):
   if format == 'hevc':
-    return get_hevc_results;
+    return get_hevc_results
   if format == 'webp':
-    return get_webp_results;
+    return get_webp_results
+  if format == 'jxr':
+    return get_jxr_results
   sys.stderr.write("Can't find results function for format!\n")
   sys.exit(rv)
 
 # Each format is a tuple with name and associated functions
-supported_formats = ['webp', 'hevc']
+supported_formats = ['webp', 'hevc', 'jxr']
 
 def main(argv):
   if len(argv) != 4:
