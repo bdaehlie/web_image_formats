@@ -30,7 +30,7 @@
 
 /* Expects 4:2:0 YCbCr */
 
-/* gcc yuvwebp.c -I/Users/josh/src/image-formats/libwebp-0.3.1/src/ -L/Users/josh/src/image-formats/libwebp-0.3.1/src/ -lwebp -o yuvwebp */
+/* gcc -std=c99 yuvwebp.c -I/Users/josh/src/image-formats/libwebp-0.3.1/src/ -L/Users/josh/src/image-formats/libwebp-0.3.1/src/ -lwebp -o yuvwebp */
 
 #include <errno.h>
 #include <stdio.h>
@@ -42,7 +42,7 @@
 #include "webp/encode.h"
 
 int main(int argc, char *argv[]) {
-  if (argc < 2 || argc > 5) {
+  if (argc != 5) {
     fprintf(stderr, "Required arguments:\n");
     fprintf(stderr, "1. WebP quality value, 0-100\n");
     fprintf(stderr, "2. Image size (e.g. '512x512'\n");
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
     return 1;
   }
   fwrite(writer.mem, writer.size, 1, webp_fd);
-  close(webp_fd);
+  fclose(webp_fd);
 
   return 0;
 }

@@ -31,7 +31,7 @@
 /* Input: WebP */
 /* Output: YUV 4:2:0 */
 
-/* gcc webpyuv.c -I/Users/josh/src/image-formats/libwebp-0.3.1/src/ -L/Users/josh/src/image-formats/libwebp-0.3.1/src/ -lwebp -o webpyuv */
+/* gcc -std=c99 webpyuv.c -I/Users/josh/src/image-formats/libwebp-0.3.1/src/ -L/Users/josh/src/image-formats/libwebp-0.3.1/src/ -lwebp -o webpyuv */
 
 #include <errno.h>
 #include <stdio.h>
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
   fwrite(y_buffer, y_stride * image_height, 1, yuv_fd);
   fwrite(u_buffer, uv_stride * image_height / 2, 1, yuv_fd);
   fwrite(v_buffer, uv_stride * image_height / 2, 1, yuv_fd);
-  close(webp_fd);
+  fclose(webp_fd);
 
   free(y_buffer);
 

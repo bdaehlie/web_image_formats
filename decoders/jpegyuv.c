@@ -28,9 +28,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Expects 4:2:0 YCbCr */
+/* Outputs 4:2:0 YCbCr */
 
-/* gcc -std=c99 yuvjpeg.c -I/opt/local/include/ -L/opt/local/lib/ -ljpeg -o yuvjpeg */
+/* gcc -std=c99 jpegyuv.c -I/opt/local/include/ -L/opt/local/lib/ -ljpeg -o jpegyuv */
 
 #include <errno.h>
 #include <stdio.h>
@@ -42,89 +42,44 @@
 #include "jpeglib.h"
 
 int main(int argc, char *argv[]) {
-  if (argc != 5) {
+  if (argc != 3) {
     fprintf(stderr, "Required arguments:\n");
-    fprintf(stderr, "1. JPEG quality value, 0-100\n");
-    fprintf(stderr, "2. Image size (e.g. '512x512'\n");
-    fprintf(stderr, "3. Path to YUV input file\n");
-    fprintf(stderr, "4. Path to JPG output file\n");
+    fprintf(stderr, "1. Path to JPG input file\n");
+    fprintf(stderr, "2. Path to YUV output file\n");
     return 1;
   }
 
   errno = 0;
 
-  long quality = strtol(argv[1], NULL, 10);
-  if (errno != 0 || quality < 0 || quality > 100) {
-    fprintf(stderr, "Invalid JPEG quality value!\n");
-    return 1;
-  }
-
-  const char *size = argv[2];
-  char *x = strchr(size, 'x');
-  if (!x && x != size && x != (x + strlen(x) - 1)) {
-    fprintf(stderr, "Invalid image size input!\n");
-    return 1;
-  }
-  long width = strtol(size, NULL, 10);
-  if (errno != 0) {
-    fprintf(stderr, "Invalid image size input!\n");
-    return 1;
-  }
-  long height = strtol(x + 1, NULL, 10);
-  if (errno != 0) {
-    fprintf(stderr, "Invalid image size input!\n");
-    return 1;
-  }
-
   /* Will check these for validity when opening via 'fopen'. */
-  const char *yuv_path = argv[3];
-  const char *jpg_path = argv[4];
+  const char *jpg_path = argv[1];
+  const char *yuv_path = argv[2];
 
-  FILE *yuv_fd = fopen(yuv_path, "r");
-  if (!yuv_fd) {
-    fprintf(stderr, "Invalid path to YUV file!\n");
-    return 1;
-  }
-
-  fseek(yuv_fd, 0, SEEK_END);
-  long yuv_size = ftell(yuv_fd);
-  fseek(yuv_fd, 0, SEEK_SET);
-  JSAMPLE *image_buffer = malloc(yuv_size);
-  fread(image_buffer, yuv_size, 1, yuv_fd);
-
-  fclose(yuv_fd);
-
-  struct jpeg_compress_struct cinfo;
+  struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
   cinfo.err = jpeg_std_error(&jerr);
-  jpeg_create_compress(&cinfo);
+  jpeg_create_decompress(&cinfo);
 
-  FILE *jpg_fd = fopen(jpg_path, "wb");
+  FILE *jpg_fd = fopen(jpg_path, "rb");
   if (!jpg_fd) {
     fprintf(stderr, "Invalid path to JPEG file!\n");
     return 1;
   }
 
-  jpeg_stdio_dest(&cinfo, jpg_fd);
+  jpeg_stdio_src(&cinfo, jpg_fd);
 
-  cinfo.image_width = width;
-  cinfo.image_height = height;
-  cinfo.input_components = 3;
-  jpeg_set_defaults(&cinfo);
+  jpeg_read_header(&cinfo, TRUE);
 
-  cinfo.raw_data_in = TRUE;
-  cinfo.do_fancy_downsampling = FALSE;
-  cinfo.in_color_space = JCS_YCbCr;
-  cinfo.comp_info[0].h_samp_factor = 2;
-  cinfo.comp_info[0].v_samp_factor = 2;
-  cinfo.comp_info[1].h_samp_factor = 1;
-  cinfo.comp_info[1].v_samp_factor = 1;
-  cinfo.comp_info[2].h_samp_factor = 1;
-  cinfo.comp_info[2].v_samp_factor = 1;
+  cinfo.raw_data_out = TRUE;
+  cinfo.do_fancy_upsampling = FALSE;
 
-  jpeg_set_quality(&cinfo, quality, TRUE);
+  jpeg_start_decompress(&cinfo);
 
-  jpeg_start_compress(&cinfo, TRUE);
+  int width = cinfo.output_width;
+  int height = cinfo.output_height;
+
+  int yuv_size = (width * height) + (((width >> 1) * (height >> 1)) * 2);
+  JSAMPLE *image_buffer = malloc(yuv_size);
 
   JSAMPROW yrow_pointer[16];
   JSAMPROW cbrow_pointer[8];
@@ -133,27 +88,33 @@ int main(int argc, char *argv[]) {
   plane_pointer[0] = yrow_pointer;
   plane_pointer[1] = cbrow_pointer;
   plane_pointer[2] = crrow_pointer;
-  while (cinfo.next_scanline < cinfo.image_height) {
+  while (cinfo.output_scanline < cinfo.output_height) {
     for (int y = 0; y < 16; y++) {
-      yrow_pointer[y] = image_buffer + cinfo.image_width * (cinfo.next_scanline + y);
+      yrow_pointer[y] = image_buffer + cinfo.image_width * (cinfo.output_scanline + y);
     }
     for (int y = 0; y < 8; y++) {
       cbrow_pointer[y] = image_buffer + width * height +
-                         ((width + 1) >> 1) * ((cinfo.next_scanline >> 1) + y);
+                         ((width + 1) >> 1) * ((cinfo.output_scanline >> 1) + y);
       crrow_pointer[y] = image_buffer + width * height +
                          ((width + 1) >> 1) * ((height + 1) >> 1) +
-                         ((width + 1) >> 1) * ((cinfo.next_scanline >> 1) + y);
+                         ((width + 1) >> 1) * ((cinfo.output_scanline >> 1) + y);
     }
-    jpeg_write_raw_data(&cinfo, plane_pointer, 16);
+    jpeg_read_raw_data(&cinfo, plane_pointer, 16);
   }
 
-  jpeg_finish_compress(&cinfo);
+  jpeg_finish_decompress(&cinfo);
 
-  jpeg_destroy_compress(&cinfo);
-
-  free(image_buffer);
+  jpeg_destroy_decompress(&cinfo);
 
   fclose(jpg_fd);
+
+  FILE *yuv_fd = fopen(yuv_path, "wb");
+  if (!yuv_fd) {
+    fprintf(stderr, "Invalid path to YUV file!");
+    return 1;
+  }
+  fwrite(image_buffer, yuv_size, 1, yuv_fd);
+  fclose(yuv_fd);
 
   return 0;
 }

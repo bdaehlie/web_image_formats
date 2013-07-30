@@ -34,6 +34,7 @@ import math
 
 # Paths to various programs used by the tests.
 yuvjpeg = "./encoders/yuvjpeg"
+jpegyuv = "./decoders/jpegyuv"
 yuvwebp = "./encoders/yuvwebp"
 webpyuv = "./decoders/webpyuv"
 convert = "/opt/local/bin/convert"
@@ -130,7 +131,7 @@ def get_jpeg_results(in_png, quality):
   run_silent(cmd)
   jpeg_file_size = os.path.getsize(yuv_jpg)
   jpg_yuv = yuv_jpg + ".yuv"
-  cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, yuv_jpg, jpg_yuv)
+  cmd = "%s %s %s" % (jpegyuv, yuv_jpg, jpg_yuv)
   run_silent(cmd)
   yuv_png = jpg_yuv + ".png"
   yuv_to_png(jpg_yuv, get_png_width(in_png), get_png_height(in_png), yuv_png)
