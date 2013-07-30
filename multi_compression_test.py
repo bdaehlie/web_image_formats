@@ -51,16 +51,21 @@ def main(argv):
   for i in test_images:
     output = subprocess.Popen(["./compression_test.py", format_name, str(jpeg_q), i], stdout=subprocess.PIPE).communicate()[0]
     lines = output.splitlines(False)
-    i = 0
-    for line in lines:
-      s = line.split()
-      if i == 0:
-        ssim_total += float(s[1])
-      if i == 1:
-        tformat_file_size_total += float(s[1])
-      if i == 2:
-        jpeg_file_size_total += float(s[1])
-      i += 1
+    try:
+      i = 0
+      for line in lines:
+        s = line.split()
+        if i == 0:
+          ssim_total += float(s[1])
+        if i == 1:
+          tformat_file_size_total += float(s[1])
+        if i == 2:
+          jpeg_file_size_total += float(s[1])
+        i += 1
+    except ValueError:
+      sys.stderr.write(output)
+      sys.stderr.write("Unexpected output from subprocess, aborting!\n")
+      sys.exit(1)
 
   avg_ssim = ssim_total / float(len(test_images))
   avg_tformat_file_size = tformat_file_size_total / float(len(test_images))
