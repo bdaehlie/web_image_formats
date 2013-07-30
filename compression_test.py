@@ -239,7 +239,8 @@ def results_function_for_format(format):
   sys.exit(rv)
 
 # Each format is a tuple with name and associated functions
-supported_formats = ['webp', 'hevc', 'jxr']
+# Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
+supported_formats = ['webp', 'hevc']
 
 def main(argv):
   if len(argv) != 4:
