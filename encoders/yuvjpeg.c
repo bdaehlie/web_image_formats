@@ -75,6 +75,11 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Invalid image size input!\n");
     return 1;
   }
+  /* Right now we only support dimensions that are multiples of 16. */
+  if ((width % 16) != 0 || (height % 16) != 0) {
+    fprintf(stderr, "Image dimensions must be multiples of 16!\n");
+    return 1;
+  }
 
   /* Will check these for validity when opening via 'fopen'. */
   const char *yuv_path = argv[3];

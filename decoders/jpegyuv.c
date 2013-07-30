@@ -28,7 +28,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Outputs 4:2:0 YCbCr */
+/* Input: JPEG YUV 4:2:0 */
+/* Output: YUV 4:2:0 */
 
 /* gcc -std=c99 jpegyuv.c -I/opt/local/include/ -L/opt/local/lib/ -ljpeg -o jpegyuv */
 
@@ -77,6 +78,11 @@ int main(int argc, char *argv[]) {
 
   int width = cinfo.output_width;
   int height = cinfo.output_height;
+  /* Right now we only support dimensions that are multiples of 16. */
+  if ((width % 16) != 0 || (height % 16) != 0) {
+    fprintf(stderr, "Image dimensions must be multiples of 16!\n");
+    return 1;
+  }
 
   int yuv_size = (width * height) + (((width >> 1) * (height >> 1)) * 2);
   JSAMPLE *image_buffer = malloc(yuv_size);
