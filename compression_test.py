@@ -168,7 +168,7 @@ def get_hevc_results(in_png, quality):
   png_to_yuv(in_png, png_yuv)
   yuv_hevc = png_yuv + ".hevc"
   hevc_yuv = yuv_hevc + ".yuv"
-  cmd = "%s -c %s -wdt %i -hgt %i --SAOLcuBoundary 1 -q %i -i %s -fr 50 -f 1 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, png_yuv, yuv_hevc, hevc_yuv)
+  cmd = "%s -c %s -wdt %i -hgt %i -q %i -i %s -fr 50 -f 1 --SEIDecodedPictureHash 0 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, png_yuv, yuv_hevc, hevc_yuv)
   run_silent(cmd)
   hevc_file_size = os.path.getsize(yuv_hevc)
   hevc_file_size += 80 # Penalize HEVC bit streams for not having a container like
