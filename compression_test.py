@@ -116,11 +116,11 @@ def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
   return file_size_interpolate(high_results[0], low_results[0], jpg_ssim, high_results[1], low_results[1])
 
 def png_to_yuv(in_png, out_yuv):
-  cmd = "%s %s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, out_yuv)
+  cmd = "%s png:%s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, out_yuv)
   run_silent(cmd)
 
 def yuv_to_png(in_yuv, width, height, out_png):
-  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size %ix%i %s %s" % (convert, width, height, in_yuv, out_png)
+  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size %ix%i yuv:%s %s" % (convert, width, height, in_yuv, out_png)
   run_silent(cmd)
 
 def get_jpeg_results(in_png, quality):
