@@ -183,13 +183,15 @@ def get_hevc_results(in_png, quality):
   os.remove(yuv_png)
   return (hevc_ssim, hevc_file_size)
 
-#TODO: Make this use YUV input like everything else
+# JPEG-XR uses a non-YCbCr colorspace, so we let it do its own conversion
+# from the original PNG. This gives jxr an advantage. We force 4:2:0 sampling
+# to minimize the advantage. Any study should note the advantage given to jxr.
 def get_jxr_results(in_png, quality):
   png_bmp = path_for_file_in_tmp(in_png) + str(quality) + ".bmp"
   cmd = "%s %s %s" % (convert, in_png, png_bmp)
   run_silent(cmd)
   bmp_jxr = png_bmp + ".jxr"
-  cmd = "%s -i %s -o %s -q %f" % (cjxr, png_bmp, bmp_jxr, quality)
+  cmd = "%s -d 1 -i %s -o %s -q %f" % (cjxr, png_bmp, bmp_jxr, quality)
   run_silent(cmd)
   jxr_file_size = os.path.getsize(bmp_jxr)
   jxr_bmp = bmp_jxr + ".bmp"
@@ -240,7 +242,7 @@ def results_function_for_format(format):
 
 # Each format is a tuple with name and associated functions
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
-supported_formats = ['webp', 'hevc']
+supported_formats = ['webp', 'hevc', 'jxr']
 
 def main(argv):
   if len(argv) != 4:
@@ -272,7 +274,7 @@ def main(argv):
   print "SSIM: " + str(jpg_ssim)[:5]
   print "%s_File_Size_(kb): %.1f" % (format_name, float(file_size) / 1024.0)
   print "jpeg_File_Size_(kb): %.1f" % (float(jpg_file_size) / 1024.0)
-  print "WebP_to_JPEG_File_Size_Ratio: %.2f" % (ratio)
+  print "%s_to_JPEG_File_Size_Ratio: %.2f" % (format_name, ratio)
 
 if __name__ == "__main__":
   main(sys.argv)

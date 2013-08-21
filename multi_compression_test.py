@@ -32,7 +32,7 @@ import subprocess
 
 def main(argv):
   if len(argv) < 4:
-    print "First arg is the name of a supported format to test (e.g. 'hevc' or 'webp')."
+    print "First arg is the name of a supported format to test (e.g. 'hevc', 'webp', or 'jxr')."
     print "Second arg is a JPEG quality value to test (e.g. '75')."
     print "All further arguments are file paths to images to test (e.g. 'images/Lenna.png')."
     print "There must be at least one image given."
