@@ -110,7 +110,12 @@ def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
     if webp_ssim > jpg_ssim:
       high_index = i
       high_results = results
-  if low_index == -1 or high_index == len(quality_list):
+  if low_index == -1:
+    # We're OK with not being able to produce something as bad as the jpg.
+    # Just return the smallest file size we were able to generate, which is
+    # stored in "high_results" because we never produced anything smaller.
+    return high_results[1]
+  if high_index == len(quality_list):
     sys.stderr.write("Failure: Unsuccessful binary search!\n")
     sys.exit(1)
   return file_size_interpolate(high_results[0], low_results[0], jpg_ssim, high_results[1], low_results[1])
