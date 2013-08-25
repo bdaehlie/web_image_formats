@@ -38,10 +38,11 @@ jpegyuv = "./decoders/jpegyuv"
 yuvwebp = "./encoders/yuvwebp"
 webpyuv = "./decoders/webpyuv"
 convert = "/opt/local/bin/convert"
-ssim = "/Users/josh/src/image-formats/SSIM/ssim"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
 cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
 djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
+ssim = "/Users/josh/src/image-formats/SSIM/ssim"
+psnrhvs = "/Users/josh/src/image-formats/daala/tools/dump_psnrhvs"
 
 # HEVC config file
 hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
@@ -52,26 +53,47 @@ tmpdir = "/tmp/"
 # Run a subprocess with silent non-error output
 def run_silent(cmd):
   FNULL = open(os.devnull, 'w')
-  rv = subprocess.call(cmd.split(), stdout=FNULL, stderr=subprocess.STDOUT)
+  rv = subprocess.call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
   if rv != 0:
     sys.stderr.write("Failure from subprocess, aborting!\n")
     sys.exit(rv)
   return rv
 
-# Return a single float value from the ssim program output.
-def ssim_float_for_images(img1_path, img2_path):
-  cmd = "%s %s %s" % (ssim, img1_path, img2_path)
-  proc = os.popen(cmd, "r")
-  proc.readline() # Throw out the first line of output
-  r = float(proc.readline().strip().strip('%'))
-  g = float(proc.readline().strip().strip('%'))
-  b = float(proc.readline().strip().strip('%'))
+def psnrhvs_score(width, height, yuv1, yuv2):
+  yuv_y4m1 = yuv1 + ".y4m"
+  yuv_to_y4m(width, height, yuv1, yuv_y4m1)
+  yuv_y4m2 = yuv2 + ".y4m"
+  yuv_to_y4m(width, height, yuv2, yuv_y4m2)
+  cmd = "%s %s %s" % (psnrhvs, yuv_y4m1, yuv_y4m2)
+  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  lines = out.split(os.linesep)
+  qscore = float(lines[1][7:13])
+  os.remove(yuv_y4m1)
+  os.remove(yuv_y4m2)
+  return qscore
+
+def ssim_score(png1, png2):
+  cmd = "%s %s %s" % (ssim, png1, png2)
+  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  lines = out.split(os.linesep)
+  r = float(lines[1].strip().strip('%'))
+  g = float(lines[2].strip().strip('%'))
+  b = float(lines[3].strip().strip('%'))
   return (((r + g + b) / 3) / 100)
 
-# Converts a file path to the path that represents
-# the same file in the tmp dir.
-def path_for_file_in_tmp(in_path):
-  return tmpdir + str(os.getpid()) + os.path.basename(in_path)
+def quality_score(quality_test, png1, png2, yuv1, yuv2):
+  if quality_test == 'ssim':
+    return ssim_score(png1, png2)
+  elif quality_test == 'psnrhvs':
+    return psnrhvs_score(get_png_width(png1), get_png_height(png1), yuv1, yuv2)
+  sys.stderr.write("Failure: Invalid quality test!\n")
+  sys.exit(1)
+  return 0.0
+
+def path_for_file_in_tmp(path):
+  return tmpdir + str(os.getpid()) + os.path.basename(path)
 
 # Returns file size at particular SSIM via interpolation.
 def file_size_interpolate(ssim_high, ssim_low, ssim_value, file_size_high, file_size_low):
@@ -80,34 +102,37 @@ def file_size_interpolate(ssim_high, ssim_low, ssim_value, file_size_high, file_
     ssim_p = (ssim_value - ssim_low) / (ssim_high - ssim_low)
   return (((file_size_high - file_size_low) * ssim_p) + file_size_low)
 
-def get_png_width(png_path):
-  cmd = "identify -format \"%%w\" %s" % (png_path)
-  proc = os.popen(cmd, "r")
-  return int(proc.readline().strip())
+def get_png_width(path):
+  cmd = "identify -format \"%%w\" %s" % (path)
+  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  lines = out.split(os.linesep)
+  return int(lines[0].strip())
 
-def get_png_height(png_path):
-  cmd = "identify -format \"%%h\" %s" % (png_path)
-  proc = os.popen(cmd, "r")
-  return int(proc.readline().strip())
+def get_png_height(path):
+  cmd = "identify -format \"%%h\" %s" % (path)
+  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  lines = out.split(os.linesep)
+  return int(lines[0].strip())
 
-def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
+def find_file_size_for_qscore(results_function, quality_test, png, quality_list, jpg_qscore):
   low_index = -1
   low_results = (0.0, 0)
   high_index = len(quality_list)
   high_results = (0.0, 0)
   while (high_index - low_index) > 1:
     i = int(math.floor((float(high_index - low_index) / 2.0)) + low_index)
-    results = results_function(png, quality_list[i])
-    webp_ssim = results[0]
-    webp_file_size = results[1]
-    if webp_ssim == jpg_ssim:
+    results = results_function(quality_test, png, quality_list[i])
+    qscore = results[0]
+    if qscore == jpg_qscore:
       low_index = high_index = i
       low_results = high_results = results
       break
-    if webp_ssim < jpg_ssim:
+    if qscore < jpg_qscore:
       low_index = i
       low_results = results
-    if webp_ssim > jpg_ssim:
+    if qscore > jpg_qscore:
       high_index = i
       high_results = results
   if low_index == -1:
@@ -118,85 +143,95 @@ def find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim):
   if high_index == len(quality_list):
     sys.stderr.write("Failure: Unsuccessful binary search!\n")
     sys.exit(1)
-  return file_size_interpolate(high_results[0], low_results[0], jpg_ssim, high_results[1], low_results[1])
+  return file_size_interpolate(high_results[0], low_results[0], jpg_qscore, high_results[1], low_results[1])
 
-def png_to_yuv(in_png, out_yuv):
-  cmd = "%s png:%s -sampling-factor 4:2:0 -depth 8 %s" % (convert, in_png, out_yuv)
+def png_to_yuv(png, out_yuv):
+  cmd = "%s png:%s -sampling-factor 4:2:0 -depth 8 %s" % (convert, png, out_yuv)
   run_silent(cmd)
 
-def yuv_to_png(in_yuv, width, height, out_png):
-  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size %ix%i yuv:%s %s" % (convert, width, height, in_yuv, out_png)
+def yuv_to_png(width, height, yuv, out_png):
+  cmd = "%s -sampling-factor 4:2:0 -depth 8 -size %ix%i yuv:%s %s" % (convert, width, height, yuv, out_png)
   run_silent(cmd)
 
-def get_jpeg_results(in_png, quality):
-  png_yuv = path_for_file_in_tmp(in_png) + str(quality) + ".yuv"
-  png_to_yuv(in_png, png_yuv)
+def yuv_to_y4m(width, height, yuv, out_y4m):
+  in_file = open(yuv, 'rb')
+  yuv_bytes = in_file.read()
+  in_file.close()
+  out_file = open(out_y4m, 'wb')
+  out_file.write("YUV4MPEG2 W%s H%s F30:1 Ip A0:0" % (width, height))
+  out_file.write(b'\x0A')
+  out_file.write("FRAME")
+  out_file.write(b'\x0A')
+  out_file.write(yuv_bytes)
+  out_file.close()
+
+def get_jpeg_results(quality_test, png, jpg_quality):
+  png_yuv = path_for_file_in_tmp(png) + str(jpg_quality) + ".yuv"
+  png_to_yuv(png, png_yuv)
   yuv_jpg = png_yuv + ".jpg"
-  cmd = "%s %i %ix%i %s %s" % (yuvjpeg, quality, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_jpg)
+  cmd = "%s %i %ix%i %s %s" % (yuvjpeg, jpg_quality, get_png_width(png), get_png_height(png), png_yuv, yuv_jpg)
   run_silent(cmd)
   jpeg_file_size = os.path.getsize(yuv_jpg)
   jpg_yuv = yuv_jpg + ".yuv"
   cmd = "%s %s %s" % (jpegyuv, yuv_jpg, jpg_yuv)
   run_silent(cmd)
   yuv_png = jpg_yuv + ".png"
-  yuv_to_png(jpg_yuv, get_png_width(in_png), get_png_height(in_png), yuv_png)
-  jpeg_ssim = ssim_float_for_images(in_png, yuv_png)
+  yuv_to_png(get_png_width(png), get_png_height(png), jpg_yuv, yuv_png)
+  qscore = quality_score(quality_test, png, yuv_png, png_yuv, jpg_yuv)
   os.remove(png_yuv)
   os.remove(yuv_jpg)
   os.remove(jpg_yuv)
   os.remove(yuv_png)
-  return (jpeg_ssim, jpeg_file_size)
+  return (qscore, jpeg_file_size)
 
-# Returns an SSIM value and a file size
-def get_webp_results(in_png, quality):
-  png_yuv = path_for_file_in_tmp(in_png) + str(quality) + ".yuv"
-  png_to_yuv(in_png, png_yuv)
+def get_webp_results(quality_test, png, webp_quality):
+  png_yuv = path_for_file_in_tmp(png) + str(webp_quality) + ".yuv"
+  png_to_yuv(png, png_yuv)
   yuv_webp = png_yuv + ".webp"
-  cmd = "%s %i %ix%i %s %s" % (yuvwebp, quality, get_png_width(in_png), get_png_height(in_png), png_yuv, yuv_webp)
+  cmd = "%s %i %ix%i %s %s" % (yuvwebp, webp_quality, get_png_width(png), get_png_height(png), png_yuv, yuv_webp)
   run_silent(cmd)
   webp_file_size = os.path.getsize(yuv_webp)
   webp_yuv = yuv_webp + ".yuv"
   cmd = "%s %s %s" % (webpyuv, yuv_webp, webp_yuv)
   run_silent(cmd)
   yuv_png = webp_yuv + ".png"
-  yuv_to_png(webp_yuv, get_png_width(in_png), get_png_height(in_png), yuv_png)
-  webp_ssim = ssim_float_for_images(in_png, yuv_png)
+  yuv_to_png(get_png_width(png), get_png_height(png), webp_yuv, yuv_png)
+  qscore = quality_score(quality_test, png, yuv_png, png_yuv, webp_yuv)
   os.remove(png_yuv)
   os.remove(yuv_webp)
   os.remove(webp_yuv)
   os.remove(yuv_png)
-  return (webp_ssim, webp_file_size)
+  return (qscore, webp_file_size)
 
-# Returns an SSIM value and a file size
-def get_hevc_results(in_png, quality):
-  png_yuv = path_for_file_in_tmp(in_png) + str(quality) + ".yuv"
-  png_to_yuv(in_png, png_yuv)
+def get_hevc_results(quality_test, png, hevc_quality):
+  png_yuv = path_for_file_in_tmp(png) + str(hevc_quality) + ".yuv"
+  png_to_yuv(png, png_yuv)
   yuv_hevc = png_yuv + ".hevc"
   hevc_yuv = yuv_hevc + ".yuv"
-  cmd = "%s -c %s -wdt %i -hgt %i -q %i -i %s -fr 50 -f 1 --SEIDecodedPictureHash 0 -b %s -o %s" % (chevc, hevc_config, get_png_width(in_png), get_png_height(in_png), quality, png_yuv, yuv_hevc, hevc_yuv)
+  cmd = "%s -c %s -wdt %i -hgt %i -q %i -i %s -fr 50 -f 1 --SEIDecodedPictureHash 0 -b %s -o %s" % (chevc, hevc_config, get_png_width(png), get_png_height(png), hevc_quality, png_yuv, yuv_hevc, hevc_yuv)
   run_silent(cmd)
   hevc_file_size = os.path.getsize(yuv_hevc)
   hevc_file_size += 80 # Penalize HEVC bit streams for not having a container like
                        # other formats do. Came up with this number because a
                        # 1x1 pixel hevc file is 84 bytes.
   yuv_png = hevc_yuv + ".png"
-  yuv_to_png(hevc_yuv, get_png_width(in_png), get_png_height(in_png), yuv_png)
-  hevc_ssim = ssim_float_for_images(in_png, yuv_png)
+  yuv_to_png(get_png_width(png), get_png_height(png), hevc_yuv, yuv_png)
+  qscore = quality_score(quality_test, png, yuv_png, png_yuv, hevc_yuv)
   os.remove(png_yuv)
   os.remove(yuv_hevc)
   os.remove(hevc_yuv)
   os.remove(yuv_png)
-  return (hevc_ssim, hevc_file_size)
+  return (qscore, hevc_file_size)
 
 # JPEG-XR uses a non-YCbCr colorspace, so we let it do its own conversion
 # from the original PNG. This gives jxr an advantage. We force 4:2:0 sampling
 # to minimize the advantage. Any study should note the advantage given to jxr.
-def get_jxr_results(in_png, quality):
-  png_bmp = path_for_file_in_tmp(in_png) + str(quality) + ".bmp"
-  cmd = "%s %s %s" % (convert, in_png, png_bmp)
+def get_jxr_results(quality_test, png, jxr_quality):
+  png_bmp = path_for_file_in_tmp(png) + str(jxr_quality) + ".bmp"
+  cmd = "%s %s %s" % (convert, png, png_bmp)
   run_silent(cmd)
   bmp_jxr = png_bmp + ".jxr"
-  cmd = "%s -d 1 -i %s -o %s -q %f" % (cjxr, png_bmp, bmp_jxr, quality)
+  cmd = "%s -d 1 -i %s -o %s -q %f" % (cjxr, png_bmp, bmp_jxr, jxr_quality)
   run_silent(cmd)
   jxr_file_size = os.path.getsize(bmp_jxr)
   jxr_bmp = bmp_jxr + ".bmp"
@@ -205,12 +240,15 @@ def get_jxr_results(in_png, quality):
   bmp_png = jxr_bmp + ".png"
   cmd = "%s %s %s" % (convert, jxr_bmp, bmp_png)
   run_silent(cmd)
-  ssim = ssim_float_for_images(in_png, bmp_png)
+  if quality_test != 'ssim':
+    sys.stderr.write("Failure: JPEG XR only supported by ssim!\n")
+    sys.exit(1)
+  qscore = ssim_score(png, bmp_png)
   os.remove(png_bmp)
   os.remove(bmp_jxr)
   os.remove(jxr_bmp)
   os.remove(bmp_png)
-  return (ssim, jxr_file_size)
+  return (qscore, jxr_file_size)
 
 def quality_list_for_format(format):
   possible_q = []
@@ -249,12 +287,15 @@ def results_function_for_format(format):
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
 supported_formats = ['webp', 'hevc', 'jxr']
 
+supported_tests = ['ssim', 'psnrhvs']
+
 def main(argv):
-  if len(argv) != 4:
-    print "First arg is format to test %s" % (supported_formats)
-    print "Second arg is a JPEG quality value to test (e.g. '75')."
-    print "Third arg is the path to an image to test (e.g. 'images/Lenna.png')."
-    print "Output is four lines: SSIM, target format file size, JPEG file size, and target format to JPEG file size ratio."
+  if len(argv) != 5:
+    print "Arg 1: format to test %s" % (supported_formats)
+    print "Arg 2: image quality test to use %s" % (supported_tests)
+    print "Arg 3: JPEG quality value to test (e.g. '75')."
+    print "Arg 4: path to an image to test (e.g. 'images/Lenna.png')."
+    print "Output is four lines: quality score, target format file size, JPEG file size, and target format to JPEG file size ratio."
     print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
     return
 
@@ -265,21 +306,26 @@ def main(argv):
   quality_list = quality_list_for_format(format_name)
   results_function = results_function_for_format(format_name)
 
-  jpg_q = int(argv[2])
-  png = argv[3]
+  quality_test = argv[2]
+  if quality_test not in supported_tests:
+    print "Image quality test not supported!"
+    return
 
-  jpg_results = get_jpeg_results(png, jpg_q)
-  jpg_ssim = jpg_results[0]
+  jpg_q = int(argv[3])
+  png = argv[4]
+
+  jpg_results = get_jpeg_results(quality_test, png, jpg_q)
+  jpg_qscore = jpg_results[0]
   jpg_file_size = jpg_results[1]
 
-  file_size = find_file_size_for_ssim(results_function, png, quality_list, jpg_ssim)
+  file_size = find_file_size_for_qscore(results_function, quality_test, png, quality_list, jpg_qscore)
 
   ratio = float(file_size) / float(jpg_file_size)
 
-  print "SSIM: " + str(jpg_ssim)[:5]
-  print "%s_File_Size_(kb): %.1f" % (format_name, float(file_size) / 1024.0)
-  print "jpeg_File_Size_(kb): %.1f" % (float(jpg_file_size) / 1024.0)
-  print "%s_to_JPEG_File_Size_Ratio: %.2f" % (format_name, ratio)
+  print "%s: %s" % (quality_test, str(jpg_qscore)[:5])
+  print "%s_file_size_(kb): %.1f" % (format_name, float(file_size) / 1024.0)
+  print "jpeg_file_size_(kb): %.1f" % (float(jpg_file_size) / 1024.0)
+  print "%s_to_jpeg_file_size_ratio: %.2f" % (format_name, ratio)
 
 if __name__ == "__main__":
   main(sys.argv)

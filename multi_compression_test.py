@@ -32,24 +32,26 @@ import subprocess
 
 def main(argv):
   if len(argv) < 4:
-    print "First arg is the name of a supported format to test (e.g. 'hevc', 'webp', or 'jxr')."
-    print "Second arg is a JPEG quality value to test (e.g. '75')."
+    print "Arg 1: format to test (e.g. 'hevc', 'webp', or 'jxr')."
+    print "Arg 2: image quality test to use (e.g. 'ssim' or 'psnrhvs')"
+    print "Arg 3: JPEG quality value to test (e.g. '75')."
     print "All further arguments are file paths to images to test (e.g. 'images/Lenna.png')."
     print "There must be at least one image given."
-    print "Output is four lines: SSIM, tested format file size, JPEG file size, and tested format to JPEG file size ratio."
+    print "Output is four lines: quality score, tested format file size, JPEG file size, and tested format to JPEG file size ratio."
     print "This is the arithmetic average of results from all images."
     print "Output labels have no spaces so that a string split on a line produces the numeric result at index 1."
     return
 
   format_name = argv[1]
-  jpeg_q = int(argv[2])
-  test_images = argv[3:]
+  quality_test = argv[2]
+  jpeg_q = int(argv[3])
+  test_images = argv[4:]
 
   ssim_total = 0.0
   jpeg_file_size_total = 0.0 # This is in KB
   tformat_file_size_total = 0.0 # This is in KB
   for i in test_images:
-    output = subprocess.Popen(["./compression_test.py", format_name, str(jpeg_q), i], stdout=subprocess.PIPE).communicate()[0]
+    output = subprocess.Popen(["./compression_test.py", format_name, quality_test, str(jpeg_q), i], stdout=subprocess.PIPE).communicate()[0]
     lines = output.splitlines(False)
     try:
       i = 0
