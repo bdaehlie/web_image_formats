@@ -75,10 +75,10 @@ def main(argv):
 
   ratio = avg_tformat_file_size / avg_jpeg_file_size
 
-  print "Avg_SSIM: " + str(avg_ssim)[:5]
-  print "Avg_Tested_Format_File_Size_(kb): %.1f" % (avg_tformat_file_size)
-  print "Avg_JPEG_File_Size_(kb): %.1f" % (avg_jpeg_file_size)
-  print "Tested_Format_to_JPEG_File_Size_Ratio: %.2f" % (ratio)
+  print "avg_%s: %s" % (quality_test, str(avg_ssim)[:5])
+  print "avg_%s_file_size_(kb): %.1f" % (format_name, avg_tformat_file_size)
+  print "avg_jpeg_file_size_(kb): %.1f" % (avg_jpeg_file_size)
+  print "%s_to_jpeg_file_size_ratio: %.2f" % (format_name, ratio)
 
 if __name__ == "__main__":
   main(sys.argv)
