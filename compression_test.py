@@ -37,10 +37,10 @@ yuvjpeg = "./encoders/yuvjpeg"
 jpegyuv = "./decoders/jpegyuv"
 yuvwebp = "./encoders/yuvwebp"
 webpyuv = "./decoders/webpyuv"
+yuvjxr = "./encoders/yuvjxr"
+jxryuv = "./decoders/jxryuv"
 convert = "/opt/local/bin/convert"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
-cjxr = "/Users/josh/src/image-formats/jxrlib/JxrEncApp"
-djxr = "/Users/josh/src/image-formats/jxrlib/JxrDecApp"
 ssim = "/Users/josh/src/image-formats/SSIM/ssim"
 psnrhvs = "/Users/josh/src/image-formats/daala/tools/dump_psnrhvs"
 
@@ -223,31 +223,23 @@ def get_hevc_results(quality_test, png, hevc_quality):
   os.remove(yuv_png)
   return (qscore, hevc_file_size)
 
-# JPEG-XR uses a non-YCbCr colorspace, so we let it do its own conversion
-# from the original PNG. This gives jxr an advantage. We force 4:2:0 sampling
-# to minimize the advantage. Any study should note the advantage given to jxr.
 def get_jxr_results(quality_test, png, jxr_quality):
-  png_bmp = path_for_file_in_tmp(png) + str(jxr_quality) + ".bmp"
-  cmd = "%s %s %s" % (convert, png, png_bmp)
+  png_yuv = path_for_file_in_tmp(png) + str(jxr_quality) + ".yuv"
+  png_to_yuv(png, png_yuv)
+  yuv_jxr = png_yuv + ".jxr"
+  cmd = "%s %d %ix%i %s %s" % (yuvjxr, jxr_quality, get_png_width(png), get_png_height(png), png_yuv, yuv_jxr)
   run_silent(cmd)
-  bmp_jxr = png_bmp + ".jxr"
-  cmd = "%s -d 1 -i %s -o %s -q %f" % (cjxr, png_bmp, bmp_jxr, jxr_quality)
+  jxr_file_size = os.path.getsize(yuv_jxr)
+  jxr_yuv = yuv_jxr + ".yuv"
+  cmd = "%s %s %s" % (jxryuv, yuv_jxr, jxr_yuv)
   run_silent(cmd)
-  jxr_file_size = os.path.getsize(bmp_jxr)
-  jxr_bmp = bmp_jxr + ".bmp"
-  cmd = "%s -i %s -o %s" % (djxr, bmp_jxr, jxr_bmp)
-  run_silent(cmd)
-  bmp_png = jxr_bmp + ".png"
-  cmd = "%s %s %s" % (convert, jxr_bmp, bmp_png)
-  run_silent(cmd)
-  if quality_test != 'ssim':
-    sys.stderr.write("Failure: JPEG XR only supported by ssim!\n")
-    sys.exit(1)
-  qscore = ssim_score(png, bmp_png)
-  os.remove(png_bmp)
-  os.remove(bmp_jxr)
-  os.remove(jxr_bmp)
-  os.remove(bmp_png)
+  yuv_png = jxr_yuv + ".png"
+  yuv_to_png(get_png_width(png), get_png_height(png), jxr_yuv, yuv_png)
+  qscore = quality_score(quality_test, png, yuv_png, png_yuv, jxr_yuv)
+  os.remove(png_yuv)
+  #os.remove(yuv_jxr)
+  os.remove(jxr_yuv)
+  os.remove(yuv_png)
   return (qscore, jxr_file_size)
 
 def quality_list_for_format(format):
@@ -265,10 +257,10 @@ def quality_list_for_format(format):
       q += 1
     return possible_q
   if format == 'jxr':
-    q = 0.0
-    while q < 1.0:
+    q = 0
+    while q < 101:
       possible_q.append(q)
-      q += 0.01
+      q += 1
     return possible_q
   sys.stderr.write("Can't find quality list for format!\n")
   sys.exit(rv)
