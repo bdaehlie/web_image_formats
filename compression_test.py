@@ -237,7 +237,7 @@ def get_jxr_results(quality_test, png, jxr_quality):
   yuv_to_png(get_png_width(png), get_png_height(png), jxr_yuv, yuv_png)
   qscore = quality_score(quality_test, png, yuv_png, png_yuv, jxr_yuv)
   os.remove(png_yuv)
-  #os.remove(yuv_jxr)
+  os.remove(yuv_jxr)
   os.remove(jxr_yuv)
   os.remove(yuv_png)
   return (qscore, jxr_file_size)
