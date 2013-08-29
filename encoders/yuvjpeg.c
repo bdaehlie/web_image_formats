@@ -128,6 +128,7 @@ int main(int argc, char *argv[]) {
   cinfo.comp_info[2].v_samp_factor = 1;
 
   jpeg_set_quality(&cinfo, quality, TRUE);
+  cinfo.optimize_coding = TRUE;
 
   jpeg_start_compress(&cinfo, TRUE);
 
