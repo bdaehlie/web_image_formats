@@ -43,9 +43,13 @@ convert = "/opt/local/bin/convert"
 chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
 ssim = "/Users/josh/src/image-formats/SSIM/ssim"
 psnrhvs = "/Users/josh/src/image-formats/daala/tools/dump_psnrhvs"
+matlab = "/Applications/MATLAB_R2013a.app/bin/matlab"
 
 # HEVC config file
 hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
+
+# path to directory containing required MATLAB code, see README
+matlab_iwssim_dir = "/Users/josh/src/image-formats/iwssim"
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
@@ -83,9 +87,18 @@ def ssim_score(png1, png2):
   b = float(lines[3].strip().strip('%'))
   return (((r + g + b) / 3) / 100)
 
+def iw_ssim_score(png1, png2):
+  cmd = "%s -nosplash -nodesktop -r \"addpath('%s'), iwssim(rgb2gray(imread('%s')), rgb2gray(imread('%s'))), quit\"" % (matlab, matlab_iwssim_dir, png1, png2)
+  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  lines = out.split(os.linesep)
+  return float(lines[13].strip())
+
 def quality_score(quality_test, png1, png2, yuv1, yuv2):
   if quality_test == 'ssim':
     return ssim_score(png1, png2)
+  elif quality_test == 'iwssim':
+    return iw_ssim_score(png1, png2)
   elif quality_test == 'psnrhvs':
     return psnrhvs_score(get_png_width(png1), get_png_height(png1), yuv1, yuv2)
   sys.stderr.write("Failure: Invalid quality test!\n")
@@ -95,12 +108,11 @@ def quality_score(quality_test, png1, png2, yuv1, yuv2):
 def path_for_file_in_tmp(path):
   return tmpdir + str(os.getpid()) + os.path.basename(path)
 
-# Returns file size at particular SSIM via interpolation.
-def file_size_interpolate(ssim_high, ssim_low, ssim_value, file_size_high, file_size_low):
-  ssim_p = 1.0
-  if ssim_high != ssim_low:
-    ssim_p = (ssim_value - ssim_low) / (ssim_high - ssim_low)
-  return (((file_size_high - file_size_low) * ssim_p) + file_size_low)
+def file_size_interpolate(qscore_high, qscore_low, qscore, file_size_high, file_size_low):
+  qscore_p = 1.0
+  if qscore_high != qscore_low:
+    qscore_p = (qscore - qscore_low) / (qscore_high - qscore_low)
+  return (((file_size_high - file_size_low) * qscore_p) + file_size_low)
 
 def get_png_width(path):
   cmd = "identify -format \"%%w\" %s" % (path)
@@ -279,7 +291,7 @@ def results_function_for_format(format):
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
 supported_formats = ['webp', 'hevc', 'jxr']
 
-supported_tests = ['ssim', 'psnrhvs']
+supported_tests = ['ssim', 'iwssim', 'psnrhvs']
 
 def main(argv):
   if len(argv) != 5:
