@@ -92,7 +92,13 @@ def iw_ssim_score(png1, png2):
   proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   lines = out.split(os.linesep)
-  return float(lines[13].strip())
+  i = 0
+  while i < len(lines):
+    if lines[i].strip() == "ans =":
+      result = float(lines[i + 2].strip())
+      break
+    i += 1;
+  return result
 
 def quality_score(quality_test, png1, png2, yuv1, yuv2):
   if quality_test == 'ssim':
