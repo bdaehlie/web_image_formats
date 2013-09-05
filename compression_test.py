@@ -31,6 +31,7 @@ import os
 import subprocess
 import sys
 import math
+import shlex
 
 # Paths to various programs used by the tests.
 yuvjpeg = "./encoders/yuvjpeg"
@@ -57,7 +58,7 @@ tmpdir = "/tmp/"
 # Run a subprocess with silent non-error output
 def run_silent(cmd):
   FNULL = open(os.devnull, 'w')
-  rv = subprocess.call(cmd, shell=True, stdout=FNULL, stderr=FNULL)
+  rv = subprocess.call(shlex.split(cmd), stdout=FNULL, stderr=FNULL)
   if rv != 0:
     sys.stderr.write("Failure from subprocess, aborting!\n")
     sys.exit(rv)
@@ -69,7 +70,7 @@ def psnrhvs_score(width, height, yuv1, yuv2):
   yuv_y4m2 = yuv2 + ".y4m"
   yuv_to_y4m(width, height, yuv2, yuv_y4m2)
   cmd = "%s -y %s %s" % (psnrhvs, yuv_y4m1, yuv_y4m2)
-  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   lines = out.split(os.linesep)
   qscore = float(lines[1][7:13])
@@ -79,7 +80,7 @@ def psnrhvs_score(width, height, yuv1, yuv2):
 
 def ssim_score(png1, png2):
   cmd = "%s %s %s" % (ssim, png1, png2)
-  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   lines = out.split(os.linesep)
   r = float(lines[1].strip().strip('%'))
@@ -89,7 +90,7 @@ def ssim_score(png1, png2):
 
 def iw_ssim_score(png1, png2):
   cmd = "%s -nosplash -nodesktop -r \"addpath('%s'), iwssim(rgb2gray(imread('%s')), rgb2gray(imread('%s'))), quit\"" % (matlab, matlab_iwssim_dir, png1, png2)
-  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   lines = out.split(os.linesep)
   i = 0
@@ -122,14 +123,14 @@ def file_size_interpolate(qscore_high, qscore_low, qscore, file_size_high, file_
 
 def get_png_width(path):
   cmd = "identify -format \"%%w\" %s" % (path)
-  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   lines = out.split(os.linesep)
   return int(lines[0].strip())
 
 def get_png_height(path):
   cmd = "identify -format \"%%h\" %s" % (path)
-  proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   lines = out.split(os.linesep)
   return int(lines[0].strip())
