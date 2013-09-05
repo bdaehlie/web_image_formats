@@ -281,7 +281,7 @@ def quality_list_for_format(format):
       q += 1
     return possible_q
   sys.stderr.write("Can't find quality list for format!\n")
-  sys.exit(rv)
+  sys.exit(1)
 
 def results_function_for_format(format):
   if format == 'hevc':
@@ -291,7 +291,7 @@ def results_function_for_format(format):
   if format == 'jxr':
     return get_jxr_results
   sys.stderr.write("Can't find results function for format!\n")
-  sys.exit(rv)
+  sys.exit(1)
 
 # Each format is a tuple with name and associated functions
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
