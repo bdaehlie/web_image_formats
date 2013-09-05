@@ -72,6 +72,9 @@ def psnrhvs_score(width, height, yuv1, yuv2):
   cmd = "%s -y %s %s" % (psnrhvs, yuv_y4m1, yuv_y4m2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: psnrhvs\n")
+    sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   qscore = float(lines[1][7:13])
   os.remove(yuv_y4m1)
@@ -82,6 +85,9 @@ def ssim_score(png1, png2):
   cmd = "%s %s %s" % (ssim, png1, png2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: ssim\n")
+    sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   r = float(lines[1].strip().strip('%'))
   g = float(lines[2].strip().strip('%'))
@@ -92,6 +98,9 @@ def iw_ssim_score(png1, png2):
   cmd = "%s -nosplash -nodesktop -r \"addpath('%s'), iwssim(rgb2gray(imread('%s')), rgb2gray(imread('%s'))), quit\"" % (matlab, matlab_iwssim_dir, png1, png2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: matlab iw_ssim\n")
+    sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   i = 0
   while i < len(lines):
@@ -125,6 +134,9 @@ def get_png_width(path):
   cmd = "identify -format \"%%w\" %s" % (path)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: identify\n")
+    sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   return int(lines[0].strip())
 
@@ -132,6 +144,9 @@ def get_png_height(path):
   cmd = "identify -format \"%%h\" %s" % (path)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: identify\n")
+    sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   return int(lines[0].strip())
 

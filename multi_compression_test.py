@@ -51,7 +51,13 @@ def main(argv):
   jpeg_file_size_total = 0.0 # This is in KB
   tformat_file_size_total = 0.0 # This is in KB
   for i in test_images:
-    output = subprocess.Popen(["./compression_test.py", format_name, quality_test, str(jpeg_q), i], stdout=subprocess.PIPE).communicate()[0]
+    cmd = ["./compression_test.py", format_name, quality_test, str(jpeg_q), i]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, err = proc.communicate()
+    if proc.returncode != 0:
+      sys.stderr.write(err)
+      sys.stderr.write("Subprocess returned with failure status, aborting!\n")
+      sys.exit(proc.returncode)
     lines = output.splitlines(False)
     try:
       i = 0
