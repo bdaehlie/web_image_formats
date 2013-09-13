@@ -26,9 +26,7 @@
 //
 //*@@@---@@@@******************************************************************
 
-/* Modified by Josh Aas, Mozilla Corporation */
-
-/* g++ -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o jxryuv -L../../jxrlib -ljpegxr -ljxrglue jxryuv.c */
+/* gcc -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o jxryuv -L../../jxrlib -ljpegxr -ljxrglue jxryuv.c */
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <JXRTest.h>
@@ -124,7 +122,7 @@ main(int argc, char* argv[])
         rc.Width  = width;
         rc.Height = height;
     
-        pDecoder->WMP.wmiSCP.bYUVData = true;
+        pDecoder->WMP.wmiSCP.bYUVData = TRUE;
         
         decode_buffer = (int*)malloc(4*yuv_size);
         Call( pDecoder->Copy(pDecoder, &rc, (U8*)decode_buffer, width*3*4) );

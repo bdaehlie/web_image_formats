@@ -26,9 +26,7 @@
 //
 //*@@@---@@@@******************************************************************
 
-/* Modified by Josh Aas, Mozilla Corportion */
-
-/* g++ -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o yuvjxr -L../../jxrlib -ljpegxr -ljxrglue yuvjxr.c */
+/* gcc -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o yuvjxr -L../../jxrlib -ljpegxr -ljxrglue yuvjxr.c */
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <JXRTest.h>
@@ -51,13 +49,13 @@ int DPK_QPS_420[11][6] = {      // for 8 bit only
     {  2,  2,  3,  2,  2,  2 }
 };
 
-void init_encoder_params(CWMIStrCodecParam& params, int quality_i)
+void init_encoder_params(CWMIStrCodecParam* params, int quality_i)
 {
-    memset(&params, 0, sizeof(params));
+    memset(params, 0, sizeof(*params));
 
-    params.bYUVData = true;
-    params.cfColorFormat = YUV_420;
-    params.bdBitDepth    = BD_LONG;
+    params->bYUVData = TRUE;
+    params->cfColorFormat = YUV_420;
+    params->bdBitDepth    = BD_LONG;
 
     // quality 100 means lossless - which can be flagged by qp indecies of '0'
     if( quality_i < 100 )
@@ -69,22 +67,22 @@ void init_encoder_params(CWMIStrCodecParam& params, int quality_i)
     
         const int *pQPs = DPK_QPS_420[index];
     
-        if (quality >= 0.5F)
-            params.olOverlap = OL_ONE;
-        else
-            params.olOverlap = OL_TWO;
+		if (quality >= 0.5F)
+			params->olOverlap = OL_ONE;
+		else
+			params->olOverlap = OL_TWO;
 
-        params.uiDefaultQPIndex    = 
+        params->uiDefaultQPIndex    = 
             (U8) (0.5f + (float) pQPs[0] * (1.f - frac) + (float) (pQPs + 6)[0] * frac);
-        params.uiDefaultQPIndexU   = 
+        params->uiDefaultQPIndexU   = 
             (U8) (0.5f + (float) pQPs[1] * (1.f - frac) + (float) (pQPs + 6)[1] * frac);
-        params.uiDefaultQPIndexV   = 
+        params->uiDefaultQPIndexV   = 
             (U8) (0.5f + (float) pQPs[2] * (1.f - frac) + (float) (pQPs + 6)[2] * frac);
-        params.uiDefaultQPIndexYHP = 
+        params->uiDefaultQPIndexYHP = 
             (U8) (0.5f + (float) pQPs[3] * (1.f - frac) + (float) (pQPs + 6)[3] * frac);
-        params.uiDefaultQPIndexUHP = 
+        params->uiDefaultQPIndexUHP = 
             (U8) (0.5f + (float) pQPs[4] * (1.f - frac) + (float) (pQPs + 6)[4] * frac);
-        params.uiDefaultQPIndexVHP = 
+        params->uiDefaultQPIndexVHP = 
             (U8) (0.5f + (float) pQPs[5] * (1.f - frac) + (float) (pQPs + 6)[5] * frac);
     }
 }
@@ -190,7 +188,7 @@ main(int argc, char* argv[])
     // set encoder parameters including quality
     {
         CWMIStrCodecParam params;
-        init_encoder_params(params, quality);
+        init_encoder_params(&params, quality);
     
         // run encoder
         ERR err;
