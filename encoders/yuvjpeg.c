@@ -120,12 +120,24 @@ int main(int argc, char *argv[]) {
   cinfo.raw_data_in = TRUE;
   cinfo.do_fancy_downsampling = FALSE;
   cinfo.in_color_space = JCS_YCbCr;
+
   cinfo.comp_info[0].h_samp_factor = 2;
   cinfo.comp_info[0].v_samp_factor = 2;
+  cinfo.comp_info[0].dc_tbl_no = 0;
+  cinfo.comp_info[0].ac_tbl_no = 0;
+  cinfo.comp_info[0].quant_tbl_no = 0;
+
   cinfo.comp_info[1].h_samp_factor = 1;
   cinfo.comp_info[1].v_samp_factor = 1;
+  cinfo.comp_info[1].dc_tbl_no = 1;
+  cinfo.comp_info[1].ac_tbl_no = 1;
+  cinfo.comp_info[1].quant_tbl_no = 1;
+
   cinfo.comp_info[2].h_samp_factor = 1;
   cinfo.comp_info[2].v_samp_factor = 1;
+  cinfo.comp_info[2].dc_tbl_no = 1;
+  cinfo.comp_info[2].ac_tbl_no = 1;
+  cinfo.comp_info[2].quant_tbl_no = 1;
 
   jpeg_set_quality(&cinfo, quality, TRUE);
   cinfo.optimize_coding = TRUE;
