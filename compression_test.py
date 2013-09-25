@@ -49,9 +49,10 @@ matlab = "/Applications/MATLAB_R2013a.app/bin/matlab"
 
 # HEVC config file
 hevc_config = "../jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
-
 # path to directory containing required MATLAB code, see README
 matlab_iwssim_dir = "../iwssim"
+# path to directory containing ssim.m
+matlab_y_ssim_dir = "../matlab_y_ssim/"
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
@@ -81,6 +82,22 @@ def psnrhvs_score(width, height, yuv1, yuv2):
   os.remove(yuv_y4m1)
   os.remove(yuv_y4m2)
   return qscore
+
+def y_ssim_score(png1, png2):
+  cmd = "%s -nosplash -nodesktop -r \"addpath('%s'), ssim(rgb2gray(imread('%s')), rgb2gray(imread('%s'))), quit\"" % (matlab, matlab_y_ssim_dir, png1, png2)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: matlab iw_ssim\n")
+    sys.exit(proc.returncode)
+  lines = out.split(os.linesep)
+  i = 0
+  while i < len(lines):
+    if lines[i].strip() == "ans =":
+      result = float(lines[i + 2].strip())
+      break
+    i += 1;
+  return result
 
 def rgb_ssim_score(png1, png2):
   cmd = "%s %s %s" % (rgbssim, png1, png2)
@@ -114,6 +131,8 @@ def iw_ssim_score(png1, png2):
 def quality_score(quality_test, png1, png2, yuv1, yuv2):
   if quality_test == 'rgbssim':
     return rgb_ssim_score(png1, png2)
+  elif quality_test == 'yssim':
+    return y_ssim_score(png1, png2)
   elif quality_test == 'iwssim':
     return iw_ssim_score(png1, png2)
   elif quality_test == 'psnrhvs':
@@ -316,7 +335,7 @@ def results_function_for_format(format):
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
 supported_formats = ['webp', 'hevc', 'jxr']
 
-supported_tests = ['rgbssim', 'iwssim', 'psnrhvs']
+supported_tests = ['yssim', 'rgbssim', 'iwssim', 'psnrhvs']
 
 def main(argv):
   if len(argv) != 5:
