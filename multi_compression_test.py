@@ -33,7 +33,7 @@ import subprocess
 def main(argv):
   if len(argv) < 4:
     print "Arg 1: format to test (e.g. 'hevc', 'webp', or 'jxr')."
-    print "Arg 2: image quality test to use (e.g. 'ssim', 'iwssim', or 'psnrhvs')"
+    print "Arg 2: image quality test to use (e.g. 'rgbssim', 'iwssim', or 'psnrhvs')"
     print "Arg 3: JPEG quality value to test (e.g. '75')."
     print "All further arguments are file paths to images to test (e.g. 'images/Lenna.png')."
     print "There must be at least one image given."
@@ -47,7 +47,7 @@ def main(argv):
   jpeg_q = int(argv[3])
   test_images = argv[4:]
 
-  ssim_total = 0.0
+  score_total = 0.0
   jpeg_file_size_total = 0.0 # This is in KB
   tformat_file_size_total = 0.0 # This is in KB
   for i in test_images:
@@ -64,7 +64,7 @@ def main(argv):
       for line in lines:
         s = line.split()
         if i == 0:
-          ssim_total += float(s[1])
+          score_total += float(s[1])
         if i == 1:
           tformat_file_size_total += float(s[1])
         if i == 2:
@@ -75,13 +75,13 @@ def main(argv):
       sys.stderr.write("Unexpected output from subprocess, aborting!\n")
       sys.exit(1)
 
-  avg_ssim = ssim_total / float(len(test_images))
+  avg_score = score_total / float(len(test_images))
   avg_tformat_file_size = tformat_file_size_total / float(len(test_images))
   avg_jpeg_file_size = jpeg_file_size_total / float(len(test_images))
 
   ratio = avg_tformat_file_size / avg_jpeg_file_size
 
-  print "avg_%s: %s" % (quality_test, str(avg_ssim)[:5])
+  print "avg_%s: %s" % (quality_test, str(avg_score)[:5])
   print "avg_%s_file_size_(kb): %.1f" % (format_name, avg_tformat_file_size)
   print "avg_jpeg_file_size_(kb): %.1f" % (avg_jpeg_file_size)
   print "%s_to_jpeg_file_size_ratio: %.2f" % (format_name, ratio)
