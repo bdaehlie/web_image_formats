@@ -43,7 +43,7 @@ yuvjxr = "./encoders/yuvjxr"
 jxryuv = "./decoders/jxryuv"
 convert = "convert"
 chevc = "../jctvc-hm/trunk/bin/TAppEncoderStatic"
-ssim = "../SSIM/ssim"
+rgbssim = "../SSIM/ssim"
 psnrhvs = "../daala/tools/dump_psnrhvs"
 matlab = "/Applications/MATLAB_R2013a.app/bin/matlab"
 
@@ -82,12 +82,12 @@ def psnrhvs_score(width, height, yuv1, yuv2):
   os.remove(yuv_y4m2)
   return qscore
 
-def ssim_score(png1, png2):
-  cmd = "%s %s %s" % (ssim, png1, png2)
+def rgb_ssim_score(png1, png2):
+  cmd = "%s %s %s" % (rgbssim, png1, png2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode != 0:
-    sys.stderr.write("Failed process: ssim\n")
+    sys.stderr.write("Failed process: %s\n" % (rgbssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   r = float(lines[1].strip().strip('%'))
@@ -112,8 +112,8 @@ def iw_ssim_score(png1, png2):
   return result
 
 def quality_score(quality_test, png1, png2, yuv1, yuv2):
-  if quality_test == 'ssim':
-    return ssim_score(png1, png2)
+  if quality_test == 'rgbssim':
+    return rgb_ssim_score(png1, png2)
   elif quality_test == 'iwssim':
     return iw_ssim_score(png1, png2)
   elif quality_test == 'psnrhvs':
@@ -316,7 +316,7 @@ def results_function_for_format(format):
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
 supported_formats = ['webp', 'hevc', 'jxr']
 
-supported_tests = ['ssim', 'iwssim', 'psnrhvs']
+supported_tests = ['rgbssim', 'iwssim', 'psnrhvs']
 
 def main(argv):
   if len(argv) != 5:
