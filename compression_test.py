@@ -36,21 +36,22 @@ import shlex
 # Paths to various programs used by the tests.
 yuvjpeg = "./encoders/yuvjpeg"
 jpegyuv = "./decoders/jpegyuv"
+jpgcrush = "./encoders/jpgcrush/jpgcrush"
 yuvwebp = "./encoders/yuvwebp"
 webpyuv = "./decoders/webpyuv"
 yuvjxr = "./encoders/yuvjxr"
 jxryuv = "./decoders/jxryuv"
-convert = "/opt/local/bin/convert"
-chevc = "/Users/josh/src/image-formats/jctvc-hm/trunk/bin/TAppEncoderStatic"
-ssim = "/Users/josh/src/image-formats/SSIM/ssim"
-psnrhvs = "/Users/josh/src/image-formats/daala/tools/dump_psnrhvs"
+convert = "convert"
+chevc = "../jctvc-hm/trunk/bin/TAppEncoderStatic"
+ssim = "../SSIM/ssim"
+psnrhvs = "../daala/tools/dump_psnrhvs"
 matlab = "/Applications/MATLAB_R2013a.app/bin/matlab"
 
 # HEVC config file
-hevc_config = "/Users/josh/src/image-formats/jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
+hevc_config = "../jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
 
 # path to directory containing required MATLAB code, see README
-matlab_iwssim_dir = "/Users/josh/src/image-formats/iwssim"
+matlab_iwssim_dir = "../iwssim"
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
@@ -204,6 +205,8 @@ def get_jpeg_results(quality_test, png, jpg_quality):
   png_to_yuv(png, png_yuv)
   yuv_jpg = png_yuv + ".jpg"
   cmd = "%s %i %ix%i %s %s" % (yuvjpeg, jpg_quality, get_png_width(png), get_png_height(png), png_yuv, yuv_jpg)
+  run_silent(cmd)
+  cmd = "%s %s" % (jpgcrush, yuv_jpg)
   run_silent(cmd)
   jpeg_file_size = os.path.getsize(yuv_jpg)
   jpg_yuv = yuv_jpg + ".yuv"

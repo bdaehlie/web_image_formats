@@ -1,0 +1,8 @@
+# progressive jpeg scan specification (black&white)
+# optimized for size, not for actual progressive transmission.
+# this averages about 1% smaller than jpegtran's default scan order.
+0:   0  0 0 0 ;
+0:   1  8 0 2 ;
+0:   9 63 0 2 ;
+0:   1 63 2 1 ;
+0:   1 63 1 0 ;
