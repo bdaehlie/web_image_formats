@@ -1,4 +1,4 @@
-This is a test suite assembled to test various lossy image formats. Right now it supports testing WebP, HEVC-P, and JPEG XR. Supported image quality tests are SSIM, IW-SSIM, and PSNR-HVS.
+This is a test suite assembled to test various lossy image formats. Right now it supports testing WebP, HEVC-MSP, and JPEG XR. Supported image quality tests are RGB Average SSIM, Luma SSIM, IW-SSIM, and PSNR-HVS.
 
 This suite was created and is maintained on OS X. It can probably work on Linux with minimal tweaking. I tried here and there to make life easier for anyone attempting this on Windows, but it'll probably be a pain to get everything working.
 
@@ -9,6 +9,8 @@ Requirements:
 Must Have
 * ImageMagick, specifically the 'convert' utility, http://www.imagemagick.org/
 ** Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion
+* perl
+** Any version 5.x from the past few years is probably fine.
 
 HEVC-MSP Support
 * svn://hevc.kw.bbc.co.uk/svn/jctvc-hm
@@ -19,13 +21,18 @@ JPEG XR Support
 WebP Support
 * https://developers.google.com/speed/webp/download
 
-SSIM Support (C++ SSIM Implementation)
+RGB Average SSIM Support (C++ Implementation)
 * http://mehdi.rabah.free.fr/SSIM/
+
+Luma SSIM Support (MATLAB)
+* May only work on OS X as written now
+* Requires that MATLAB be installed
+* https://ece.uwaterloo.ca/~z70wang/research/ssim/
 
 PSNR-HVS Support (C++ PSNR-HVS Implementation)
 * https://xiph.org/daala/
 
-IW-SSIM Support via MATLAB script
+IW-SSIM Support (MATLAB)
 * May only work on OS X as written now
 * Requires that MATLAB be installed
 * https://ece.uwaterloo.ca/~z70wang/research/iwssim/
