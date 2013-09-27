@@ -44,7 +44,7 @@ jxryuv = "./decoders/jxryuv"
 convert = "convert"
 chevc = "../jctvc-hm/trunk/bin/TAppEncoderStatic"
 rgbssim = "../SSIM/ssim"
-psnrhvs = "../daala/tools/dump_psnrhvs"
+psnrhvsm = "../daala/tools/dump_psnrhvs"
 matlab = "/Applications/MATLAB_R2013a.app/bin/matlab"
 
 # HEVC config file
@@ -66,16 +66,16 @@ def run_silent(cmd):
     sys.exit(rv)
   return rv
 
-def psnrhvs_score(width, height, yuv1, yuv2):
+def psnrhvsm_score(width, height, yuv1, yuv2):
   yuv_y4m1 = yuv1 + ".y4m"
   yuv_to_y4m(width, height, yuv1, yuv_y4m1)
   yuv_y4m2 = yuv2 + ".y4m"
   yuv_to_y4m(width, height, yuv2, yuv_y4m2)
-  cmd = "%s -y %s %s" % (psnrhvs, yuv_y4m1, yuv_y4m2)
+  cmd = "%s -y %s %s" % (psnrhvsm, yuv_y4m1, yuv_y4m2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode != 0:
-    sys.stderr.write("Failed process: psnrhvs\n")
+    sys.stderr.write("Failed process: %s\n" % (psnrhvsm))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   qscore = float(lines[1][7:13])
@@ -135,8 +135,8 @@ def quality_score(quality_test, png1, png2, yuv1, yuv2):
     return y_ssim_score(png1, png2)
   elif quality_test == 'iwssim':
     return iw_ssim_score(png1, png2)
-  elif quality_test == 'psnrhvs':
-    return psnrhvs_score(get_png_width(png1), get_png_height(png1), yuv1, yuv2)
+  elif quality_test == 'psnrhvsm':
+    return psnrhvsm_score(get_png_width(png1), get_png_height(png1), yuv1, yuv2)
   sys.stderr.write("Failure: Invalid quality test!\n")
   sys.exit(1)
   return 0.0
@@ -335,7 +335,7 @@ def results_function_for_format(format):
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
 supported_formats = ['webp', 'hevc', 'jxr']
 
-supported_tests = ['yssim', 'rgbssim', 'iwssim', 'psnrhvs']
+supported_tests = ['yssim', 'rgbssim', 'iwssim', 'psnrhvsm']
 
 def main(argv):
   if len(argv) != 5:
