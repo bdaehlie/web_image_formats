@@ -14,6 +14,11 @@ if [[ ! -d ../jxrlib ]]; then
 fi
 ( cd ../jxrlib; make )
 
+if [[ ! -d ../daala/tools ]]; then
+    echo "Please download and build Daala with 'make tools' and place it in ../daala - https://xiph.org/daala/"
+    exit 1
+fi
+
 cd encoders
 echo "Compiling yuvjpeg..."
 gcc -std=c99 yuvjpeg.c -I/opt/local/include/ -L/opt/local/lib/ -ljpeg -o yuvjpeg || { echo 'Failed!' ; exit 1; }
