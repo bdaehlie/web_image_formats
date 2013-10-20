@@ -60,9 +60,9 @@ tmpdir = "/tmp/"
 # Run a subprocess with silent non-error output
 def run_silent(cmd):
   FNULL = open(os.devnull, 'w')
-  rv = subprocess.call(shlex.split(cmd), stdout=FNULL, stderr=FNULL)
+  rv = subprocess.call(shlex.split(cmd), stdout=FNULL, stderr=sys.stderr)
   if rv != 0:
-    sys.stderr.write("Failure from subprocess, aborting!\n")
+    sys.stderr.write("Failure from subprocess '%s', aborting!\n" % cmd)
     sys.exit(rv)
   return rv
 
@@ -72,7 +72,12 @@ def psnrhvsm_score(width, height, yuv1, yuv2):
   yuv_y4m2 = yuv2 + ".y4m"
   yuv_to_y4m(width, height, yuv2, yuv_y4m2)
   cmd = "%s -y %s %s" % (psnrhvsm, yuv_y4m1, yuv_y4m2)
-  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  try:
+    proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  except OSError as e:
+    sys.stderr.write("Failed process: %s\n%s\n" % (psnrhvsm, e))
+    sys.exit(1)
+
   out, err = proc.communicate()
   if proc.returncode != 0:
     sys.stderr.write("Failed process: %s\n" % (psnrhvsm))
