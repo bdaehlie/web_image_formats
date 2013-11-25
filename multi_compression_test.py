@@ -33,7 +33,7 @@ import subprocess
 def main(argv):
   if len(argv) < 4:
     print "Arg 1: format to test (e.g. 'hevc', 'webp', or 'jxr')."
-    print "Arg 2: image quality test to use (e.g. 'yssim', rgbssim', 'iwssim', or 'psnrhvsm')"
+    print "Arg 2: image quality test to use (e.g. 'yssim', rgbssim', 'dssim', 'iwssim', or 'psnrhvsm')"
     print "Arg 3: JPEG quality value to test (e.g. '75')."
     print "All further arguments are file paths to images to test (e.g. 'images/Lenna.png')."
     print "There must be at least one image given."

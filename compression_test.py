@@ -43,7 +43,8 @@ yuvjxr = "./encoders/yuvjxr"
 jxryuv = "./decoders/jxryuv"
 convert = "convert"
 chevc = "../jctvc-hm/trunk/bin/TAppEncoderStatic"
-rgbssim = "../SSIM/ssim"
+rgbssim = "./tests/rgbssim/rgbssim"
+dssim = "./tests/dssim/dssim"
 psnrhvsm = "../daala/tools/dump_psnrhvs"
 matlab = "/Applications/MATLAB_R2013a.app/bin/matlab"
 
@@ -112,6 +113,18 @@ def rgb_ssim_score(png1, png2):
   b = float(lines[3].strip().strip('%'))
   return (((r + g + b) / 3) / 100)
 
+def dssim_score(png1, png2):
+  cmd = "%s %s %s" % (dssim, png1, png2)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: %s\n" % (dssim))
+    sys.exit(proc.returncode)
+  lines = out.split(os.linesep)
+  d = float(lines[0].strip())
+  # Return the inverse of the distance to make this result work like the others
+  return 1.0 - d
+
 def iw_ssim_score(png1, png2):
   cmd = "%s -nosplash -nodesktop -r \"addpath('%s'), iwssim(rgb2gray(imread('%s')), rgb2gray(imread('%s'))), quit\"" % (matlab, matlab_iwssim_dir, png1, png2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -133,6 +146,8 @@ def quality_score(quality_test, png1, png2, yuv1, yuv2):
     return rgb_ssim_score(png1, png2)
   elif quality_test == 'yssim':
     return y_ssim_score(png1, png2)
+  elif quality_test == 'dssim':
+    return dssim_score(png1, png2)
   elif quality_test == 'iwssim':
     return iw_ssim_score(png1, png2)
   elif quality_test == 'psnrhvsm':
@@ -335,7 +350,7 @@ def results_function_for_format(format):
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
 supported_formats = ['webp', 'hevc', 'jxr']
 
-supported_tests = ['yssim', 'rgbssim', 'iwssim', 'psnrhvsm']
+supported_tests = ['yssim', 'rgbssim', 'dssim', 'iwssim', 'psnrhvsm']
 
 def main(argv):
   if len(argv) != 5:

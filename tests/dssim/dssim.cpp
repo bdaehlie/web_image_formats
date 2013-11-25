@@ -189,4 +189,3 @@ int main(int argc, char** argv)
 	// don't forget to release the IplImages
 	return(0);
 }
-

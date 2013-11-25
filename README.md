@@ -1,8 +1,8 @@
-This is a test suite assembled to test various lossy image formats. Right now it supports testing WebP, HEVC-MSP, and JPEG XR. Supported image quality tests are Y-SSIM (luma-only SSIM), RGB-SSIM (average of SSIM applied to R, G, and B channels), IW-SSIM, and PSNR-HVS-M.
+This is a test suite assembled to test various lossy image formats. Right now it supports testing WebP, HEVC-MSP, and JPEG XR. Supported image quality tests are Y-SSIM (luma-only SSIM), RGB-SSIM (average of SSIM applied to R, G, and B channels), DSSIM, IW-SSIM, and PSNR-HVS-M.
 
 This suite was created and is maintained on OS X. It can probably work on Linux with minimal tweaking. I tried here and there to make life easier for anyone attempting this on Windows, but it'll probably be a pain to get everything working.
 
-Install all of the requirements listed below, build whatever needs to be built in the requirements, then build every source file in './encoders' and './decoders'. Compile commands for the encoders and decoders are in comments near the top of the source files themselves, paths may need tweaking.
+Install all of the requirements listed below, build whatever needs to be built in the requirements, then run 'build.sh' to build encoders, decoders, and quality tests. Paths to programs might need tweaking near the top of 'compression_test.py'.
 
 Requirements:
 
@@ -27,7 +27,12 @@ Y-SSIM Support (MATLAB)
 * https://ece.uwaterloo.ca/~z70wang/research/ssim/
 
 RGB-SSIM Support (C++)
+* Included in the repository under 'tests'.
 * http://mehdi.rabah.free.fr/SSIM/
+
+DSSIM Support (C++)
+* Included in the repository under 'tests'.
+* http://colecovision.eu/graphics/DSSIM/
 
 PSNR-HVS-M Support (C)
 * https://xiph.org/daala/
