@@ -9,8 +9,11 @@ Requirements:
 Must Have
 * ImageMagick, specifically the 'convert' utility, http://www.imagemagick.org/
 ** Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion
+* python
+** Any version > 2.7.0 and < 3.0 is fine.
 * perl
 ** Any version 5.x from the past few years is probably fine.
+** This is used for the in-tree 'jpgcrush' program.
 
 HEVC-MSP Support
 * svn://hevc.kw.bbc.co.uk/svn/jctvc-hm
