@@ -22,12 +22,12 @@ cd ..
 
 cd tests/rgbssim
 echo "Compiling rgbssim..."
-g++ rgbssim.cpp -O2 -o rgbssim -I /opt/local/include/ -I /opt/local/include/opencv/ -L/opt/local/lib/ -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
+g++ rgbssim.cpp -O2 -o rgbssim -I /opt/local/include/ -I /opt/local/include/opencv/ -I /opt/local/include/opencv2/highgui/ -L/opt/local/lib/ -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
 cd ../..
 
 cd tests/dssim
 echo "Compiling dssim..."
-g++ dssim.cpp -O2 -o dssim -I /opt/local/include/ -I /opt/local/include/opencv/ -L/opt/local/lib/ -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
+g++ dssim.cpp -O2 -o dssim -I /opt/local/include/ -I /opt/local/include/opencv/ -I /opt/local/include/opencv2/highgui/ -L/opt/local/lib/ -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
 cd ../..
 
 echo "Success building all encoders and decoders."
