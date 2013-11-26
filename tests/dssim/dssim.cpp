@@ -42,7 +42,7 @@
 */
 
 #include <cv.h>	
-#include <highgui.h>
+#include <highgui_c.h>
 #include <iostream>
 #include <algorithm>
 
