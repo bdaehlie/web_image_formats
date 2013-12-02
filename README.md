@@ -14,6 +14,9 @@ Must Have
 * perl
 ** Any version 5.x from the past few years is probably fine.
 ** This is used for the in-tree 'jpgcrush' program.
+* jpegtran
+** Failure to install this will result in jpgcrush failure.
+** Part of 'libjpeg-progs' on Ubuntu
 
 HEVC-MSP Support
 * svn://hevc.kw.bbc.co.uk/svn/jctvc-hm
