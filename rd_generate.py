@@ -58,7 +58,9 @@ def run_silent(cmd):
   FNULL = open(os.devnull, 'w')
   rv = subprocess.call(shlex.split(cmd), stdout=FNULL, stderr=FNULL)
   if rv != 0:
-    sys.stderr.write("Failure from subprocess, aborting!\n")
+    sys.stderr.write("Failure from subprocess:\n")
+    sys.stderr.write("\t" + cmd + "\n")
+    sys.stderr.write("Aborting!")
     sys.exit(rv)
   return rv
 
@@ -155,7 +157,7 @@ def get_png_height(path):
 def write_data_for_image(file_name, format_name, png):
   file = open(file_name, "w")
 
-  pixels = get_png_height(png) / get_png_width(png)
+  pixels = get_png_height(png) * get_png_width(png)
 
   i = 0
   quality_list = quality_list_for_format(format_name)
@@ -166,7 +168,7 @@ def write_data_for_image(file_name, format_name, png):
     dssim_results = results_function('dssim', png, q)
     rgbssim_results = results_function('rgbssim', png, q)
     psnrhvsm_results = results_function('psnrhvsm', png, q)
-    file.write("%d %d %s %s %s\n" % (pixels, results[1], str(results(0))[:5]))
+    file.write("%d %d %s %s %s\n" % (pixels, dssim_results[1], str(dssim_results[0])[:5], str(rgbssim_results[0])[:5], str(psnrhvsm_results[0])[:5]))
     i += 1
 
   file.close()
@@ -272,6 +274,12 @@ def get_jxr_results(quality_test, png, jxr_quality):
 
 def quality_list_for_format(format):
   possible_q = []
+  if format == 'jpeg':
+    q = 0
+    while q < 101:
+      possible_q.append(q)
+      q += 1
+    return possible_q
   if format == 'hevc':
     q = 50
     while q >= 0.0:
@@ -294,6 +302,8 @@ def quality_list_for_format(format):
   sys.exit(1)
 
 def results_function_for_format(format):
+  if format == 'jpeg':
+    return get_jpeg_results
   if format == 'hevc':
     return get_hevc_results
   if format == 'webp':
@@ -305,7 +315,7 @@ def results_function_for_format(format):
 
 # Each format is a tuple with name and associated functions
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
-supported_formats = ['webp', 'hevc', 'jxr']
+supported_formats = ['jpeg', 'webp', 'hevc', 'jxr']
 
 supported_tests = ['yssim', 'rgbssim', 'dssim', 'iwssim', 'psnrhvsm']
 

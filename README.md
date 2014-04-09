@@ -20,12 +20,14 @@ Must Have
 
 HEVC-MSP Support
 * svn://hevc.kw.bbc.co.uk/svn/jctvc-hm
+** Tested with r3923
 
 JPEG XR Support
 * https://jxrlib.codeplex.com/releases
 
 WebP Support
 * https://developers.google.com/speed/webp/download
+** Tested with 0.4.0
 
 Y-SSIM Support (MATLAB)
 * May only work on OS X as written now
