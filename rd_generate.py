@@ -32,6 +32,7 @@ import subprocess
 import sys
 import math
 import shlex
+from multiprocessing import Pool
 
 # Paths to various programs used by the tests.
 yuvjpeg = "./encoders/yuvjpeg"
@@ -129,14 +130,16 @@ def get_png_height(path):
   lines = out.split(os.linesep)
   return int(lines[0].strip())
 
-def write_data_for_image(file_name, format_name, png):
-  file = open(file_name, "w")
+def process_image(args):
+  [format, png] = args;
+
+  file = open(png + ".out", "w")
 
   pixels = get_png_height(png) * get_png_width(png)
 
   i = 0
-  quality_list = quality_list_for_format(format_name)
-  results_function = results_function_for_format(format_name)
+  quality_list = quality_list_for_format(format)
+  results_function = results_function_for_format(format)
   while i < len(quality_list):
     q = quality_list[i]
     results = results_function(png, q)
@@ -318,24 +321,18 @@ supported_formats = ['jpeg', 'webp', 'hevc', 'jxr']
 supported_tests = ['yssim', 'rgbssim', 'dssim', 'iwssim', 'psnrhvsm']
 
 def main(argv):
-  if len(argv) < 4:
+  if len(argv) < 3:
     print "Arg 1: format to test %s" % (supported_formats)
-    print "Arg 2: output file"
-    print "Arg 3+: paths to images to test (e.g. 'images/Lenna.png')"
+    print "Arg 2+: paths to images to test (e.g. 'images/Lenna.png')"
     return
 
-  format_name = argv[1]
-  if format_name not in supported_formats:
+  format = argv[1]
+  if format not in supported_formats:
     print "Image format not supported!"
     return
 
-  file_name = argv[2]
-
-  i = 3
-  while i < len(argv):
-    png = argv[i]
-    write_data_for_image(file_name, format_name, png)
-    i += 1
+  Pool().map(process_image, [(format, png) for png in argv[2:]])
 
 if __name__ == "__main__":
   main(sys.argv)
+
