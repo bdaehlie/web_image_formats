@@ -133,7 +133,7 @@ def get_png_height(path):
 def process_image(args):
   [format, png] = args;
 
-  file = open(png + ".out", "w")
+  file = open(png + "." + format + ".out", "w")
 
   pixels = get_png_height(png) * get_png_width(png)
 
