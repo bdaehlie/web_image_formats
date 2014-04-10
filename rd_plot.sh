@@ -28,7 +28,7 @@ CMDS="$CMDS set key bot right;"
 for FILE in "$@"; do
   BASENAME=$(basename $FILE)
   DSSIM="$DSSIM $PREFIX '$FILE' using (\$2*8/\$1):3 with lines title '${BASENAME%.*} (DSSIM)'"
-  RGBSSIM="$RGBSSIM $PREFIX '$FILE' using (\$2*8/\$1):4 with lines title '${BASENAME%.*} (RGB-SSIM'"
+  RGBSSIM="$RGBSSIM $PREFIX '$FILE' using (\$2*8/\$1):4 with lines title '${BASENAME%.*} (RGB-SSIM)'"
   PSNRHVSM="$PSNRHVSM $PREFIX '$FILE' using (\$2*8/\$1):5 with lines title '${BASENAME%.*} (PSNR-HVS-M)'"
   PREFIX=","
 done
