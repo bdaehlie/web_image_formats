@@ -47,6 +47,7 @@ chevc = "../jctvc-hm/trunk/bin/TAppEncoderStatic"
 rgbssim = "./tests/rgbssim/rgbssim"
 dssim = "./tests/dssim/dssim"
 psnrhvsm = "../daala/tools/dump_psnrhvs"
+yssim = "../daala/tools/dump_ssim"
 
 # HEVC config file
 hevc_config = "../jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
@@ -64,6 +65,23 @@ def run_silent(cmd):
     sys.stderr.write("Aborting!")
     sys.exit(rv)
   return rv
+
+def score_y_ssim(width, height, yuv1, yuv2):
+  yuv_y4m1 = yuv1 + ".y4m"
+  yuv_to_y4m(width, height, yuv1, yuv_y4m1)
+  yuv_y4m2 = yuv2 + ".y4m"
+  yuv_to_y4m(width, height, yuv2, yuv_y4m2)
+  cmd = "%s -y %s %s" % (yssim, yuv_y4m1, yuv_y4m2)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: %s\n" % (psnrhvsm))
+    sys.exit(proc.returncode)
+  lines = out.split(os.linesep)
+  qscore = float(lines[1][7:13])
+  os.remove(yuv_y4m1)
+  os.remove(yuv_y4m2)
+  return qscore
 
 def score_psnrhvsm(width, height, yuv1, yuv2):
   yuv_y4m1 = yuv1 + ".y4m"
@@ -143,7 +161,7 @@ def process_image(args):
   while i < len(quality_list):
     q = quality_list[i]
     results = results_function(png, q)
-    file.write("%d %d %s %s %s\n" % (pixels, results[0], str(results[1])[:5], str(results[2])[:5], str(results[3])[:5]))
+    file.write("%d %d %s %s %s %s\n" % (pixels, results[0], str(results[1])[:5], str(results[2])[:5], str(results[3])[:5], str(results[4])[:5]))
     i += 1
 
   file.close()
@@ -184,6 +202,7 @@ def get_jpeg_results(png, quality):
 
   jpeg_file_size = os.path.getsize(yuv_jpg)
 
+  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, jpg_yuv)
   dssim_score = score_dssim(png, yuv_png)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
   psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, jpg_yuv)
@@ -193,7 +212,7 @@ def get_jpeg_results(png, quality):
   os.remove(jpg_yuv)
   os.remove(yuv_png)
 
-  return (jpeg_file_size, dssim_score, rgb_ssim_score, psnrhvsm_score)
+  return (jpeg_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
 
 def get_webp_results(png, quality):
   png_yuv = path_for_file_in_tmp(png) + str(quality) + ".yuv"
@@ -209,6 +228,7 @@ def get_webp_results(png, quality):
 
   webp_file_size = os.path.getsize(yuv_webp)
 
+  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, webp_yuv)
   dssim_score = score_dssim(png, yuv_png)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
   psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, webp_yuv)
@@ -218,7 +238,7 @@ def get_webp_results(png, quality):
   os.remove(webp_yuv)
   os.remove(yuv_png)
 
-  return (webp_file_size, dssim_score, rgb_ssim_score, psnrhvsm_score)
+  return (webp_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
 
 def get_hevc_results(png, quality):
   png_yuv = path_for_file_in_tmp(png) + str(quality) + ".yuv"
@@ -235,6 +255,7 @@ def get_hevc_results(png, quality):
                        # other formats do. Came up with this number because a
                        # 1x1 pixel hevc file is 84 bytes.
 
+  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, hevc_yuv)
   dssim_score = score_dssim(png, yuv_png)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
   psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, hevc_yuv)
@@ -244,7 +265,7 @@ def get_hevc_results(png, quality):
   os.remove(hevc_yuv)
   os.remove(yuv_png)
 
-  return (hevc_file_size, dssim_score, rgb_ssim_score, psnrhvsm_score)
+  return (hevc_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
 
 def get_jxr_results(png, quality):
   png_yuv = path_for_file_in_tmp(png) + str(quality) + ".yuv"
@@ -260,6 +281,7 @@ def get_jxr_results(png, quality):
 
   jxr_file_size = os.path.getsize(yuv_jxr)
 
+  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, jxr_yuv)
   dssim_score = score_dssim(png, yuv_png)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
   psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, jxr_yuv)
@@ -269,7 +291,7 @@ def get_jxr_results(png, quality):
   os.remove(jxr_yuv)
   os.remove(yuv_png)
 
-  return (jxr_file_size, dssim_score, rgb_ssim_score, psnrhvsm_score)
+  return (jxr_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
 
 def quality_list_for_format(format):
   possible_q = []
@@ -293,7 +315,7 @@ def quality_list_for_format(format):
     return possible_q
   if format == 'jxr':
     q = 0
-    while q < 101:
+    while q < 100:
       possible_q.append(q)
       q += 1
     return possible_q
@@ -301,7 +323,7 @@ def quality_list_for_format(format):
   sys.exit(1)
 
 # All of these functions return tuples containing:
-#   (file_size, dssim_score, rgbssim_score, psnrhvsm_score)
+#   (file_size, yssim_score, dssim_score, rgbssim_score, psnrhvsm_score)
 def results_function_for_format(format):
   if format == 'jpeg':
     return get_jpeg_results
@@ -317,8 +339,6 @@ def results_function_for_format(format):
 # Each format is a tuple with name and associated functions
 # Note that 'jxr' is disabled due to a lack of consistent encoding/decoding.
 supported_formats = ['jpeg', 'webp', 'hevc', 'jxr']
-
-supported_tests = ['yssim', 'rgbssim', 'dssim', 'iwssim', 'psnrhvsm']
 
 def main(argv):
   if len(argv) < 3:
