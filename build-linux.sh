@@ -30,6 +30,11 @@ echo "Compiling dssim..."
 g++ dssim.cpp -O2 -o dssim -I/usr/include/opencv -I/usr/include/opencv2/highgui -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
 cd ../..
 
+cd tests/ssim
+echo "Compiling ssim..."
+gcc -o ssim vidinput.c y4m_input.c ssim.c -lm || { echo 'Failed!' ; exit 1; }
+cd ../..
+
 echo "Success building all encoders and decoders."
 exit 0
 

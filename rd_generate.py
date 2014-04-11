@@ -47,7 +47,7 @@ chevc = "../jctvc-hm/trunk/bin/TAppEncoderStatic"
 rgbssim = "./tests/rgbssim/rgbssim"
 dssim = "./tests/dssim/dssim"
 psnrhvsm = "../daala/tools/dump_psnrhvs"
-yssim = "../daala/tools/dump_ssim"
+yssim = "./tests/ssim/ssim"
 
 # HEVC config file
 hevc_config = "../jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
