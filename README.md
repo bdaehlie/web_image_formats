@@ -1,13 +1,26 @@
-This is a test suite assembled to test various lossy image formats. Right now it supports testing WebP, HEVC-MSP, and JPEG XR. Supported image quality tests are Y-SSIM (luma-only SSIM), RGB-SSIM (average of SSIM applied to R, G, and B channels), DSSIM, IW-SSIM, and PSNR-HVS-M.
+This test suite tests compression for various lossy image formats:
 
-This suite was created and is maintained on OS X. It can probably work on Linux with minimal tweaking. I tried here and there to make life easier for anyone attempting this on Windows, but it'll probably be a pain to get everything working.
+* JPEG
+* WebP
+* HEVC-MSP
+* JPEG XR
 
-Install all of the requirements listed below, build whatever needs to be built in the requirements, then run 'build.sh' to build encoders, decoders, and quality tests. Paths to programs might need tweaking near the top of 'compression_test.py'.
+Supported image quality metrics are:
+
+* YSSIM (luma-only SSIM)
+* DSSIM (luma-only, based on SSIM)
+* RGB-SSIM (average of SSIM applied to R, G, and B channels)
+* PSNR-HVS-M (luma-only)
+
+This test suite is developed primarily on Linux, and secondarily on OS X. Little to no effort has gone into making this work on Windows.
+
+Install all of the requirements listed below, build whatever needs to be built in the requirements, then run 'build-[platform].sh' to build encoders, decoders, and quality tests.
 
 Requirements:
 
 Must Have
-* ImageMagick, specifically the 'convert' utility, http://www.imagemagick.org/
+* ImageMagick, specifically the 'convert' utility
+** http://www.imagemagick.org/
 ** Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion
 * python
 ** Any version > 2.7.0 and < 3.0 is fine.
@@ -24,15 +37,15 @@ HEVC-MSP Support
 
 JPEG XR Support
 * https://jxrlib.codeplex.com/releases
+** Tested with git revision cae40c1
 
 WebP Support
 * https://developers.google.com/speed/webp/download
-** Tested with 0.4.0
+** Tested with 0.4.0 release
 
-Y-SSIM Support (MATLAB)
-* May only work on OS X as written now
-* Requires that MATLAB be installed
-* https://ece.uwaterloo.ca/~z70wang/research/ssim/
+Y-SSIM Support (C)
+* Included in the repository under 'tests'.
+* Taken from the Xiph Daala project
 
 RGB-SSIM Support (C++)
 * Included in the repository under 'tests'.
@@ -43,11 +56,6 @@ DSSIM Support (C++)
 * http://colecovision.eu/graphics/DSSIM/
 
 PSNR-HVS-M Support (C)
-* https://xiph.org/daala/
+* Included in the repository under 'tests'.
+* Taken from the Xiph Daala project
 
-IW-SSIM Support (MATLAB)
-* May only work on OS X as written now
-* Requires that MATLAB be installed
-* https://ece.uwaterloo.ca/~z70wang/research/iwssim/
-* http://www.cns.nyu.edu/lcv/software.php
-* Download the iw-ssim soure, then download the matlabPyrTools source, then put all of the files in the matlabPyrTools directory into the iw-ssim source directory so that all of the required MATLAB files are in the same directory.
