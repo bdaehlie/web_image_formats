@@ -32,5 +32,7 @@ cd ../..
 
 # TODO build ssim
 
+# TODO build psnrhvsm
+
 echo "Success building all encoders and decoders."
 exit 0

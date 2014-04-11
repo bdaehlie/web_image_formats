@@ -35,6 +35,11 @@ echo "Compiling ssim..."
 gcc -o ssim vidinput.c y4m_input.c ssim.c -lm || { echo 'Failed!' ; exit 1; }
 cd ../..
 
+cd tests/psnrhvsm
+echo "Compiling psnrhvsm..."
+gcc -o psnrhvsm vidinput.c y4m_input.c psnrhvs.c -lm || { echo 'Failed!' ; exit 1; }
+cd ../..
+
 echo "Success building all encoders and decoders."
 exit 0
 
