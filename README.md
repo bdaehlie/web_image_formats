@@ -18,44 +18,31 @@ Install all of the requirements listed below, build whatever needs to be built i
 
 Requirements:
 
-Must Have
 * ImageMagick, specifically the 'convert' utility
 ** http://www.imagemagick.org/
-** Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion
+** Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion.
 * python
 ** Any version > 2.7.0 and < 3.0 is fine.
 * perl
 ** Any version 5.x from the past few years is probably fine.
 ** This is used for the in-tree 'jpgcrush' program.
 * jpegtran
-** Failure to install this will result in jpgcrush failure.
-** Part of 'libjpeg-progs' on Ubuntu
-
-HEVC-MSP Support
-* svn://hevc.kw.bbc.co.uk/svn/jctvc-hm
+** System install is used. Part of 'libjpeg-progs' on Ubuntu.
+** This is used for the in-tree 'jpgcrush' program.
+* JPEG Encoder/Decoder Library
+** Recommend libjpeg-turbo over IJG libjpeg
+** http://libjpeg-turbo.virtualgl.org/
+** System install is used.
+* HEVC-MSP Encoder/Decoder
+** svn://hevc.kw.bbc.co.uk/svn/jctvc-hm
 ** Tested with r3923
-
-JPEG XR Support
-* https://jxrlib.codeplex.com/releases
+** Place directory called "jctvc-hm" alongside this test suite.
+* JPEG XR Encoding/Decoding Library
+** https://jxrlib.codeplex.com/releases
 ** Tested with git revision cae40c1
-
-WebP Support
-* https://developers.google.com/speed/webp/download
+** Place directory called "jxrlib" alongside this test suite.
+* WebP Encoding/Decoding Library
+** https://developers.google.com/speed/webp/download
 ** Tested with 0.4.0 release
-
-Y-SSIM Support (C)
-* Included in the repository under 'tests'.
-* Taken from the Xiph Daala project
-
-RGB-SSIM Support (C++)
-* Included in the repository under 'tests'.
-* http://mehdi.rabah.free.fr/SSIM/
-
-DSSIM Support (C++)
-* Included in the repository under 'tests'.
-* http://colecovision.eu/graphics/DSSIM/
-
-PSNR-HVS-M Support (C)
-* Included in the repository under 'tests'.
-* Taken from the Xiph Daala project
+** Place directory called "libwebp-0.4.0" alongside this test suite.
 
