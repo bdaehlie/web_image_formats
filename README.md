@@ -23,12 +23,6 @@ Requirements:
 ** Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion.
 * python
 ** Any version > 2.7.0 and < 3.0 is fine.
-* perl
-** Any version 5.x from the past few years is probably fine.
-** This is used for the in-tree 'jpgcrush' program.
-* jpegtran
-** System install is used. Part of 'libjpeg-progs' on Ubuntu.
-** This is used for the in-tree 'jpgcrush' program.
 * JPEG Encoder/Decoder Library
 ** Recommend libjpeg-turbo over IJG libjpeg
 ** http://libjpeg-turbo.virtualgl.org/

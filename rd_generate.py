@@ -37,7 +37,6 @@ from multiprocessing import Pool
 # Paths to various programs used by the tests.
 yuvjpeg = "./encoders/yuvjpeg"
 jpegyuv = "./decoders/jpegyuv"
-jpgcrush = "./encoders/jpgcrush/jpgcrush"
 yuvwebp = "./encoders/yuvwebp"
 webpyuv = "./decoders/webpyuv"
 yuvjxr = "./encoders/yuvjxr"
@@ -191,8 +190,6 @@ def get_jpeg_results(png, quality):
   png_to_yuv(png, png_yuv)
   yuv_jpg = png_yuv + ".jpg"
   cmd = "%s %i %ix%i %s %s" % (yuvjpeg, quality, get_png_width(png), get_png_height(png), png_yuv, yuv_jpg)
-  run_silent(cmd)
-  cmd = "%s %s" % (jpgcrush, yuv_jpg)
   run_silent(cmd)
   jpg_yuv = yuv_jpg + ".yuv"
   cmd = "%s %s %s" % (jpegyuv, yuv_jpg, jpg_yuv)
