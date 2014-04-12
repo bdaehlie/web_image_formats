@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
   jpeg_set_defaults(&cinfo);
 
   cinfo.raw_data_in = TRUE;
-  cinfo.do_fancy_downsampling = FALSE;
+//  cinfo.do_fancy_downsampling = FALSE;
   cinfo.in_color_space = JCS_YCbCr;
 
   cinfo.comp_info[0].h_samp_factor = 2;

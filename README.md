@@ -21,6 +21,7 @@ Requirements:
 * ImageMagick, specifically the 'convert' utility
   * http://www.imagemagick.org/
   * Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion.
+    * Note that latest Ubuntu stable still has buggy older version. Fedora 20+ has a good version.
 * python
   * Any version > 2.7.0 and < 3.0 is fine.
 * JPEG Encoder/Decoder Library
