@@ -30,8 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 #include <stdlib.h>
 #include <string.h>
 
-#include <ogg/os_types.h>
-
 extern video_input_vtbl Y4M_INPUT_VTBL;
 
 int video_input_open(video_input *_vid,FILE *_fin){
@@ -57,7 +55,7 @@ int video_input_fetch_frame(video_input *_vid,
 
 void video_input_close(video_input *_vid){
   (*_vid->vtbl->close)(_vid->ctx);
-  _ogg_free(_vid->ctx);
+  free(_vid->ctx);
   fclose(_vid->fin);
 }
 

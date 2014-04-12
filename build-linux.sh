@@ -42,4 +42,3 @@ cd ../..
 
 echo "Success building all encoders and decoders."
 exit 0
-

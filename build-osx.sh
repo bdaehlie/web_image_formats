@@ -8,7 +8,7 @@ gcc yuvjpeg.c -std=c99 -I/opt/local/include/ -L/opt/local/lib/ -ljpeg -o yuvjpeg
 echo "Compiling yuvjxr..."
 gcc yuvjxr.c -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o yuvjxr -L../../jxrlib -ljpegxr -ljxrglue || { echo 'Failed!' ; exit 1; }
 echo "Compiling yuvwebp..."
-gcc yuvwebp.c -std=c99 -I/Users/josh/src/image-formats/libwebp-0.3.1/src/ -L/Users/josh/src/image-formats/libwebp-0.3.1/src/ -lwebp -o yuvwebp || { echo 'Failed!' ; exit 1; }
+gcc yuvwebp.c -o yuvwebp -std=c99 -I../../libwebp-0.4.0/src/ ../../libwebp-0.4.0/src/.libs/libwebp.a -lm -pthread || { echo 'Failed!' ; exit 1; }
 cd ..
 
 cd decoders
@@ -17,7 +17,7 @@ gcc jpegyuv.c -std=c99 -I/opt/local/include/ -L/opt/local/lib/ -ljpeg -o jpegyuv
 echo "Compiling jxryuv..."
 gcc jxryuv.c -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o jxryuv -L../../jxrlib -ljpegxr -ljxrglue || { echo 'Failed!' ; exit 1; }
 echo "Compiling webpyuv..."
-gcc webpyuv.c -std=c99 -I/Users/josh/src/image-formats/libwebp-0.3.1/src/ -L/Users/josh/src/image-formats/libwebp-0.3.1/src/ -lwebp -o webpyuv || { echo 'Failed!' ; exit 1; }
+gcc webpyuv.c -o webpyuv -std=c99 -I../../libwebp-0.4.0/src/ ../../libwebp-0.4.0/src/.libs/libwebp.a -lm -pthread || { echo 'Failed!' ; exit 1; }
 cd ..
 
 cd tests/rgbssim
@@ -30,9 +30,15 @@ echo "Compiling dssim..."
 g++ dssim.cpp -O2 -o dssim -I /opt/local/include/ -I /opt/local/include/opencv/ -I /opt/local/include/opencv2/highgui/ -L/opt/local/lib/ -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
 cd ../..
 
-# TODO build ssim
+cd tests/ssim
+echo "Compiling ssim..."
+gcc -o ssim vidinput.c y4m_input.c ssim.c -lm || { echo 'Failed!' ; exit 1; }
+cd ../..
 
-# TODO build psnrhvsm
+cd tests/psnrhvsm
+echo "Compiling psnrhvsm..."
+gcc -o psnrhvsm vidinput.c y4m_input.c psnrhvs.c -lm || { echo 'Failed!' ; exit 1; }
+cd ../..
 
 echo "Success building all encoders and decoders."
 exit 0
