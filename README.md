@@ -19,24 +19,23 @@ Install all of the requirements listed below, build whatever needs to be built i
 Requirements:
 
 * ImageMagick, specifically the 'convert' utility
-** http://www.imagemagick.org/
-** Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion.
+  * http://www.imagemagick.org/
+  * Version 6.8.6 or higher required, earlier versions have a bug in YUV conversion.
 * python
-** Any version > 2.7.0 and < 3.0 is fine.
+  * Any version > 2.7.0 and < 3.0 is fine.
 * JPEG Encoder/Decoder Library
-** Recommend libjpeg-turbo over IJG libjpeg
-** http://libjpeg-turbo.virtualgl.org/
-** System install is used.
+  * Recommend libjpeg-turbo over IJG libjpeg
+  * http://libjpeg-turbo.virtualgl.org/
+  * System install is used.
 * HEVC-MSP Encoder/Decoder
-** svn://hevc.kw.bbc.co.uk/svn/jctvc-hm
-** Tested with r3923
-** Place directory called "jctvc-hm" alongside this test suite.
+  * http://hevc.hhi.fraunhofer.de/svn/svn_HEVCSoftware/
+  * Tested with r3928
+  * Place directory called "jctvc-hm" alongside this test suite.
 * JPEG XR Encoding/Decoding Library
-** https://jxrlib.codeplex.com/releases
-** Tested with git revision cae40c1
-** Place directory called "jxrlib" alongside this test suite.
+  * https://jxrlib.codeplex.com/SourceControl/latest
+  * Tested with git revision cae40c1
+  * Place directory called "jxrlib" alongside this test suite.
 * WebP Encoding/Decoding Library
-** https://developers.google.com/speed/webp/download
-** Tested with 0.4.0 release
-** Place directory called "libwebp-0.4.0" alongside this test suite.
-
+  * https://developers.google.com/speed/webp/download
+  * Tested with 0.4.0 release
+  * Place directory called "libwebp-0.4.0" alongside this test suite.
