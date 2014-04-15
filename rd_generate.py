@@ -70,7 +70,7 @@ def score_y_ssim(width, height, yuv1, yuv2):
   yuv_to_y4m(width, height, yuv1, yuv_y4m1)
   yuv_y4m2 = yuv2 + ".y4m"
   yuv_to_y4m(width, height, yuv2, yuv_y4m2)
-  cmd = "%s -y %s %s" % (yssim, yuv_y4m1, yuv_y4m2)
+  cmd = "%s -y -r %s %s" % (yssim, yuv_y4m1, yuv_y4m2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode != 0:

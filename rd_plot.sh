@@ -27,12 +27,15 @@ CMDS="$CMDS set key bot right;"
 
 for FILE in "$@"; do
   BASENAME=$(basename $FILE)
-  DSSIM="$DSSIM $PREFIX '$FILE' using (\$2*8/\$1):3 with lines title '${BASENAME%.*} (DSSIM)'"
-  RGBSSIM="$RGBSSIM $PREFIX '$FILE' using (\$2*8/\$1):4 with lines title '${BASENAME%.*} (RGB-SSIM)'"
-  PSNRHVSM="$PSNRHVSM $PREFIX '$FILE' using (\$2*8/\$1):5 with lines title '${BASENAME%.*} (PSNR-HVS-M)'"
+  YSSIM="$YSSIM $PREFIX '$FILE' using (\$2*8/\$1):3 with lines title '${BASENAME%.*} (YSSIM)'"
+  DSSIM="$DSSIM $PREFIX '$FILE' using (\$2*8/\$1):4 with lines title '${BASENAME%.*} (DSSIM)'"
+  RGBSSIM="$RGBSSIM $PREFIX '$FILE' using (\$2*8/\$1):5 with lines title '${BASENAME%.*} (RGB-SSIM)'"
+  PSNRHVSM="$PSNRHVSM $PREFIX '$FILE' using (\$2*8/\$1):6 with lines title '${BASENAME%.*} (PSNR-HVS-M)'"
   PREFIX=","
 done
 
+SUFFIX="yssim.png"
+$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $YSSIM;"     2> /dev/null
 SUFFIX="dssim.png"
 $GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $DSSIM;"     2> /dev/null
 SUFFIX="rgbssim.png"
