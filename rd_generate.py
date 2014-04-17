@@ -44,12 +44,12 @@ jxryuv = "./decoders/jxryuv"
 convert = "convert"
 chevc = "../svn_HEVCSoftware/trunk/bin/TAppEncoderStatic"
 rgbssim = "./tests/rgbssim/rgbssim"
-dssim = "./tests/dssim/dssim"
-psnrhvsm = "./tests/psnrhvsm/psnrhvsm"
-yssim = "./tests/ssim/ssim"
+yssim = "./tests/ssim/ssim -y"
+dssim = "./tests/ssim/ssim -y -d"
+psnrhvsm = "./tests/psnrhvsm/psnrhvsm -y"
 
 # HEVC config file
-hevc_config = "../jctvc-hm/trunk/cfg/encoder_intra_main.cfg"
+hevc_config = "../svn_HEVCSoftware/trunk/cfg/encoder_intra_main.cfg"
 
 # Path to tmp dir to be used by the tests.
 tmpdir = "/tmp/"
@@ -61,7 +61,7 @@ def run_silent(cmd):
   if rv != 0:
     sys.stderr.write("Failure from subprocess:\n")
     sys.stderr.write("\t" + cmd + "\n")
-    sys.stderr.write("Aborting!")
+    sys.stderr.write("Aborting!\n")
     sys.exit(rv)
   return rv
 
@@ -70,11 +70,11 @@ def score_y_ssim(width, height, yuv1, yuv2):
   yuv_to_y4m(width, height, yuv1, yuv_y4m1)
   yuv_y4m2 = yuv2 + ".y4m"
   yuv_to_y4m(width, height, yuv2, yuv_y4m2)
-  cmd = "%s -y -r %s %s" % (yssim, yuv_y4m1, yuv_y4m2)
+  cmd = "%s %s %s" % (yssim, yuv_y4m1, yuv_y4m2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode != 0:
-    sys.stderr.write("Failed process: %s\n" % (psnrhvsm))
+    sys.stderr.write("Failed process: %s\n" % (yssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
   qscore = float(lines[1][7:13])
@@ -87,7 +87,7 @@ def score_psnrhvsm(width, height, yuv1, yuv2):
   yuv_to_y4m(width, height, yuv1, yuv_y4m1)
   yuv_y4m2 = yuv2 + ".y4m"
   yuv_to_y4m(width, height, yuv2, yuv_y4m2)
-  cmd = "%s -y %s %s" % (psnrhvsm, yuv_y4m1, yuv_y4m2)
+  cmd = "%s %s %s" % (psnrhvsm, yuv_y4m1, yuv_y4m2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode != 0:
@@ -112,17 +112,23 @@ def score_rgb_ssim(png1, png2):
   b = float(lines[3].strip().strip('%'))
   return (((r + g + b) / 3) / 100)
 
-def score_dssim(png1, png2):
-  cmd = "%s %s %s" % (dssim, png1, png2)
+def score_dssim(width, height, yuv1, yuv2):
+  yuv_y4m1 = yuv1 + ".y4m"
+  yuv_to_y4m(width, height, yuv1, yuv_y4m1)
+  yuv_y4m2 = yuv2 + ".y4m"
+  yuv_to_y4m(width, height, yuv2, yuv_y4m2)
+  cmd = "%s %s %s" % (dssim, yuv_y4m1, yuv_y4m2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode != 0:
     sys.stderr.write("Failed process: %s\n" % (dssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  d = float(lines[0].strip())
+  qscore = float(lines[1][7:13])
+  os.remove(yuv_y4m1)
+  os.remove(yuv_y4m2)
   # Return the inverse of the distance to make this result work like the others
-  return 1.0 - d
+  return 1.0 - qscore
 
 def path_for_file_in_tmp(path):
   return tmpdir + str(os.getpid()) + os.path.basename(path)
@@ -186,23 +192,26 @@ def yuv_to_y4m(width, height, yuv, out_y4m):
   out_file.close()
 
 def get_jpeg_results(png, quality):
+  width = get_png_width(png)
+  height = get_png_height(png)
+
   png_yuv = path_for_file_in_tmp(png) + str(quality) + ".yuv"
   png_to_yuv(png, png_yuv)
   yuv_jpg = png_yuv + ".jpg"
-  cmd = "%s %i %ix%i %s %s" % (yuvjpeg, quality, get_png_width(png), get_png_height(png), png_yuv, yuv_jpg)
+  cmd = "%s %i %ix%i %s %s" % (yuvjpeg, quality, width, height, png_yuv, yuv_jpg)
   run_silent(cmd)
   jpg_yuv = yuv_jpg + ".yuv"
   cmd = "%s %s %s" % (jpegyuv, yuv_jpg, jpg_yuv)
   run_silent(cmd)
   yuv_png = jpg_yuv + ".png"
-  yuv_to_png(get_png_width(png), get_png_height(png), jpg_yuv, yuv_png)
+  yuv_to_png(width, height, jpg_yuv, yuv_png)
 
   jpeg_file_size = os.path.getsize(yuv_jpg)
 
-  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, jpg_yuv)
-  dssim_score = score_dssim(png, yuv_png)
+  yssim_score = score_y_ssim(width, height, png_yuv, jpg_yuv)
+  dssim_score = score_dssim(width, height, png_yuv, jpg_yuv)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
-  psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, jpg_yuv)
+  psnrhvsm_score = score_psnrhvsm(width, height, png_yuv, jpg_yuv)
 
   os.remove(png_yuv)
   os.remove(yuv_jpg)
@@ -212,23 +221,26 @@ def get_jpeg_results(png, quality):
   return (jpeg_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
 
 def get_webp_results(png, quality):
+  width = get_png_width(png)
+  height = get_png_height(png)
+
   png_yuv = path_for_file_in_tmp(png) + str(quality) + ".yuv"
   png_to_yuv(png, png_yuv)
   yuv_webp = png_yuv + ".webp"
-  cmd = "%s %i %ix%i %s %s" % (yuvwebp, quality, get_png_width(png), get_png_height(png), png_yuv, yuv_webp)
+  cmd = "%s %i %ix%i %s %s" % (yuvwebp, quality, width, height, png_yuv, yuv_webp)
   run_silent(cmd)
   webp_yuv = yuv_webp + ".yuv"
   cmd = "%s %s %s" % (webpyuv, yuv_webp, webp_yuv)
   run_silent(cmd)
   yuv_png = webp_yuv + ".png"
-  yuv_to_png(get_png_width(png), get_png_height(png), webp_yuv, yuv_png)
+  yuv_to_png(width, height, webp_yuv, yuv_png)
 
   webp_file_size = os.path.getsize(yuv_webp)
 
-  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, webp_yuv)
-  dssim_score = score_dssim(png, yuv_png)
+  yssim_score = score_y_ssim(width, height, png_yuv, webp_yuv)
+  dssim_score = score_dssim(width, height, png_yuv, webp_yuv)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
-  psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, webp_yuv)
+  psnrhvsm_score = score_psnrhvsm(width, height, png_yuv, webp_yuv)
 
   os.remove(png_yuv)
   os.remove(yuv_webp)
@@ -238,24 +250,27 @@ def get_webp_results(png, quality):
   return (webp_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
 
 def get_hevc_results(png, quality):
+  width = get_png_width(png)
+  height = get_png_height(png)
+
   png_yuv = path_for_file_in_tmp(png) + str(quality) + ".yuv"
   png_to_yuv(png, png_yuv)
   yuv_hevc = png_yuv + ".hevc"
   hevc_yuv = yuv_hevc + ".yuv"
-  cmd = "%s -c %s -wdt %i -hgt %i -q %i -i %s -fr 50 -f 1 --SEIDecodedPictureHash 0 -b %s -o %s" % (chevc, hevc_config, get_png_width(png), get_png_height(png), quality, png_yuv, yuv_hevc, hevc_yuv)
+  cmd = "%s -c %s -wdt %i -hgt %i -q %i -i %s -fr 50 -f 1 --SEIDecodedPictureHash 0 -b %s -o %s" % (chevc, hevc_config, width, height, quality, png_yuv, yuv_hevc, hevc_yuv)
   run_silent(cmd)
   yuv_png = hevc_yuv + ".png"
-  yuv_to_png(get_png_width(png), get_png_height(png), hevc_yuv, yuv_png)
+  yuv_to_png(width, height, hevc_yuv, yuv_png)
 
   hevc_file_size = os.path.getsize(yuv_hevc)
   hevc_file_size += 80 # Penalize HEVC bit streams for not having a container like
                        # other formats do. Came up with this number because a
                        # 1x1 pixel hevc file is 84 bytes.
 
-  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, hevc_yuv)
-  dssim_score = score_dssim(png, yuv_png)
+  yssim_score = score_y_ssim(width, height, png_yuv, hevc_yuv)
+  dssim_score = score_dssim(width, height, png_yuv, hevc_yuv)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
-  psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, hevc_yuv)
+  psnrhvsm_score = score_psnrhvsm(width, height, png_yuv, hevc_yuv)
 
   os.remove(png_yuv)
   os.remove(yuv_hevc)
@@ -265,23 +280,26 @@ def get_hevc_results(png, quality):
   return (hevc_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
 
 def get_jxr_results(png, quality):
+  width = get_png_width(png)
+  height = get_png_height(png)
+
   png_yuv = path_for_file_in_tmp(png) + str(quality) + ".yuv"
   png_to_yuv(png, png_yuv)
   yuv_jxr = png_yuv + ".jxr"
-  cmd = "%s %d %ix%i %s %s" % (yuvjxr, quality, get_png_width(png), get_png_height(png), png_yuv, yuv_jxr)
+  cmd = "%s %d %ix%i %s %s" % (yuvjxr, quality, width, height, png_yuv, yuv_jxr)
   run_silent(cmd)
   jxr_yuv = yuv_jxr + ".yuv"
   cmd = "%s %s %s" % (jxryuv, yuv_jxr, jxr_yuv)
   run_silent(cmd)
   yuv_png = jxr_yuv + ".png"
-  yuv_to_png(get_png_width(png), get_png_height(png), jxr_yuv, yuv_png)
+  yuv_to_png(width, height, jxr_yuv, yuv_png)
 
   jxr_file_size = os.path.getsize(yuv_jxr)
 
-  yssim_score = score_y_ssim(get_png_width(png), get_png_height(png), png_yuv, jxr_yuv)
-  dssim_score = score_dssim(png, yuv_png)
+  yssim_score = score_y_ssim(width, height, png_yuv, jxr_yuv)
+  dssim_score = score_dssim(width, height, png_yuv, jxr_yuv)
   rgb_ssim_score = score_rgb_ssim(png, yuv_png)
-  psnrhvsm_score = score_psnrhvsm(get_png_width(png), get_png_height(png), png_yuv, jxr_yuv)
+  psnrhvsm_score = score_psnrhvsm(width, height, png_yuv, jxr_yuv)
 
   os.remove(png_yuv)
   os.remove(yuv_jxr)

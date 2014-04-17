@@ -25,10 +25,12 @@ echo "Compiling rgbssim..."
 g++ rgbssim.cpp -O2 -o rgbssim -I/usr/include/opencv -I/usr/include/opencv2/highgui -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
 cd ../..
 
-cd tests/dssim
-echo "Compiling dssim..."
-g++ dssim.cpp -O2 -o dssim -I/usr/include/opencv -I/usr/include/opencv2/highgui -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
-cd ../..
+# Not used any more, but left in case we use it again in the future.
+# We now use the dssim mode in the 'ssim' program.
+#cd tests/dssim
+#echo "Compiling dssim..."
+#g++ dssim.cpp -O2 -o dssim -I/usr/include/opencv -I/usr/include/opencv2/highgui -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
+#cd ../..
 
 cd tests/ssim
 echo "Compiling ssim..."
