@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
   if (argc != 5) {
     fprintf(stderr, "Required arguments:\n");
     fprintf(stderr, "1. JPEG quality value, 0-100\n");
-    fprintf(stderr, "2. Image size (e.g. '512x512'\n");
+    fprintf(stderr, "2. Image size (e.g. '512x512')\n");
     fprintf(stderr, "3. Path to YUV input file\n");
     fprintf(stderr, "4. Path to JPG output file\n");
     return 1;
@@ -115,11 +115,12 @@ int main(int argc, char *argv[]) {
   cinfo.image_width = width;
   cinfo.image_height = height;
   cinfo.input_components = 3;
+  cinfo.in_color_space = JCS_YCbCr;
   jpeg_set_defaults(&cinfo);
 
   cinfo.raw_data_in = TRUE;
-//  cinfo.do_fancy_downsampling = FALSE;
-  cinfo.in_color_space = JCS_YCbCr;
+  // The following is IJG-only.
+  // cinfo.do_fancy_downsampling = FALSE;
 
   cinfo.comp_info[0].h_samp_factor = 2;
   cinfo.comp_info[0].v_samp_factor = 2;
