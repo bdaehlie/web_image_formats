@@ -36,6 +36,7 @@ from multiprocessing import Pool
 
 # Paths to various programs used by the tests
 yuvjpeg = "./encoders/yuvjpeg"
+yuvmozjpeg = "./encoders/yuvmozjpeg"
 jpegyuv = "./decoders/jpegyuv"
 yuvwebp = "./encoders/yuvwebp"
 webpyuv = "./decoders/webpyuv"
@@ -109,7 +110,7 @@ def yuv_to_y4m(width, height, yuv, out_y4m):
 
 def quality_list_for_format(format):
   possible_q = []
-  if format == 'jpeg':
+  if format == 'jpeg' or format == 'mozjpeg':
     q = 0
     while q < 101:
       possible_q.append(q)
@@ -221,6 +222,13 @@ def get_results(png, format, quality):
     png_yuv_target_yuv = png_yuv_target + ".yuv"
     cmd = "%s %s %s" % (jpegyuv, png_yuv_target, png_yuv_target_yuv)
     run_silent(cmd)
+  elif format == "mozjpeg":
+    png_yuv_target = png_yuv + ".jpg"
+    cmd = "%s %i %ix%i %s %s" % (yuvmozjpeg, quality, width, height, png_yuv, png_yuv_target)
+    run_silent(cmd)
+    png_yuv_target_yuv = png_yuv_target + ".yuv"
+    cmd = "%s %s %s" % (jpegyuv, png_yuv_target, png_yuv_target_yuv)
+    run_silent(cmd)
 
   png_yuv_target_yuv_y4m = png_yuv_target_yuv + ".y4m"
   yuv_to_y4m(width, height, png_yuv_target_yuv, png_yuv_target_yuv_y4m)
@@ -266,7 +274,7 @@ def process_image(args):
 
   file.close()
 
-supported_formats = ['jpeg', 'webp', 'hevc', 'jxr']
+supported_formats = ['jpeg', 'mozjpeg', 'webp', 'hevc', 'jxr']
 
 def main(argv):
   if len(argv) < 3:
