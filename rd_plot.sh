@@ -35,11 +35,11 @@ for FILE in "$@"; do
 done
 
 SUFFIX="yssim.png"
-$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $YSSIM;"     2> /dev/null
+$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $YSSIM;"    2> /dev/null
 SUFFIX="dssim.png"
-$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $DSSIM;"     2> /dev/null
+$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $DSSIM;"    2> /dev/null
 SUFFIX="rgbssim.png"
-$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $RGBSSIM;" 2> /dev/null
+$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $RGBSSIM;"  2> /dev/null
 SUFFIX="psnrhvsm.png"
-$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $PSNRHVSM;"  2> /dev/null
+$GNUPLOT -e "$CMDS set output \"$IMAGE$SUFFIX\"; plot $PSNRHVSM;" 2> /dev/null
 
