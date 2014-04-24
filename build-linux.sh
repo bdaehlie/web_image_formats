@@ -4,20 +4,20 @@
 
 cd encoders
 echo "Compiling yuvjpeg..."
-gcc yuvjpeg.c -std=c99 -ljpeg -o yuvjpeg || { echo 'Failed!' ; exit 1; }
+gcc yuvjpeg.c -std=c99 -I../../libjpeg-turbo-1.3.1/ ../../libjpeg-turbo-1.3.1/.libs/libjpeg.a -o yuvjpeg || { echo 'Failed!' ; exit 1; }
 echo "Compiling yuvjxr..."
-gcc yuvjxr.c -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o yuvjxr -L../../jxrlib -ljxrglue -ljpegxr -lm || { echo 'Failed!' ; exit 1; }
+gcc yuvjxr.c -D__ANSI__ -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys ../../jxrlib/libjxrglue.a ../../jxrlib/libjpegxr.a -o yuvjxr -lm || { echo 'Failed!' ; exit 1; }
 echo "Compiling yuvwebp..."
 gcc yuvwebp.c -o yuvwebp -std=c99 -I../../libwebp-0.4.0/src/ ../../libwebp-0.4.0/src/.libs/libwebp.a -lm -pthread || { echo 'Failed!' ; exit 1; }
 cd ..
 
 cd decoders
 echo "Compiling jpegyuv..."
-gcc jpegyuv.c -std=c99 -ljpeg -o jpegyuv || { echo 'Failed!' ; exit 1; }
+gcc jpegyuv.c -std=c99 -I../../libjpeg-turbo-1.3.1/ ../../libjpeg-turbo-1.3.1/.libs/libjpeg.a -o jpegyuv || { echo 'Failed!' ; exit 1; }
 echo "Compiling jxryuv..."
-gcc jxryuv.c -o jxryuv -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -L../../jxrlib -ljxrglue -ljpegxr -lm || { echo 'Failed!' ; exit 1; }
+gcc jxryuv.c -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ ../../jxrlib/libjxrglue.a ../../jxrlib/libjpegxr.a -lm -o jxryuv || { echo 'Failed!' ; exit 1; }
 echo "Compiling webpyuv..."
-gcc webpyuv.c -o webpyuv -std=c99 -I../../libwebp-0.4.0/src/ ../../libwebp-0.4.0/src/.libs/libwebp.a -lm -pthread || { echo 'Failed!' ; exit 1; }
+gcc webpyuv.c -std=c99 -I../../libwebp-0.4.0/src/ ../../libwebp-0.4.0/src/.libs/libwebp.a -lm -pthread -o webpyuv || { echo 'Failed!' ; exit 1; }
 cd ..
 
 cd tests/rgbssim
