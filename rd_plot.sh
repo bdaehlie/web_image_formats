@@ -22,7 +22,7 @@ fi
 CMDS="$CMDS set term png size 1024,768;"
 CMDS="$CMDS set log x;"
 CMDS="$CMDS set xlabel 'Bits/Pixel';"
-CMDS="$CMDS set ylabel 'dB';"
+CMDS="$CMDS set ylabel 'Quality';"
 CMDS="$CMDS set key bot right;"
 
 for FILE in "$@"; do
