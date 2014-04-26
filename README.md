@@ -24,16 +24,21 @@ Requirements:
     * Note that latest Ubuntu stable still has buggy older version. Fedora 20+ has a good version.
 * python
   * Any version > 2.7.0 and < 3.0 is fine.
-* JPEG Encoder/Decoder Library
-  * Recommend libjpeg-turbo over IJG libjpeg
+* libjpeg-turbo
   * http://libjpeg-turbo.virtualgl.org/
-  * System install is used.
+  * We prefer libjpeg-turbo over IJG libjpeg
+  * Tested with 1.3.1 release
+  * Place directory called "libjpeg-turbo-1.3.1" alongside this test suite.
+* mozjpeg
+  * git clone git@github.com:mozilla/mozjpeg.git
+  * Tested with latest git revision
+  * Place directory called "mozjpeg" alongside this test suite.
 * HEVC-MSP Encoder/Decoder
-  * http://hevc.hhi.fraunhofer.de/svn/svn_HEVCSoftware/
+  * svn checkout http://hevc.hhi.fraunhofer.de/svn/svn_HEVCSoftware/
   * Tested with r3928
-  * Place directory called "jctvc-hm" alongside this test suite.
+  * Place directory called "svn_HEVCSoftware" alongside this test suite.
 * JPEG XR Encoding/Decoding Library
-  * https://jxrlib.codeplex.com/SourceControl/latest
+  * git clone https://git01.codeplex.com/jxrlib
   * Tested with git revision cae40c1
   * Place directory called "jxrlib" alongside this test suite.
 * WebP Encoding/Decoding Library
