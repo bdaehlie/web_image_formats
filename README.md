@@ -1,6 +1,7 @@
 This test suite tests compression for various lossy image formats:
 
-* JPEG
+* JPEG (via libjpeg-turbo)
+* JPEG (via mozjpeg)
 * WebP
 * HEVC-MSP
 * JPEG XR
