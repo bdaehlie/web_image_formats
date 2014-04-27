@@ -1,3 +1,7 @@
+# What Is This
+
+This is a collection of software that can test the compression efficiency of various lossy compressed image formats according to various quality metrics. It can create graphs of the test data.
+
 # Supported Formats
 
 * JPEG (via libjpeg-turbo)
