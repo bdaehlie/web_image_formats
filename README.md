@@ -25,6 +25,9 @@ Requirements:
     * Note that latest Ubuntu stable still has buggy older version. Fedora 20+ has a good version.
 * python
   * Any version > 2.7.0 and < 3.0 is fine.
+* gnuplot
+  * http://www.gnuplot.info/
+  * Any version > 4.6.0
 * libjpeg-turbo
   * http://libjpeg-turbo.virtualgl.org/
   * We prefer libjpeg-turbo over IJG libjpeg
