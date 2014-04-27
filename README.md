@@ -1,4 +1,4 @@
-This test suite tests compression for various lossy image formats:
+# Supported Formats
 
 * JPEG (via libjpeg-turbo)
 * JPEG (via mozjpeg)
@@ -6,18 +6,18 @@ This test suite tests compression for various lossy image formats:
 * HEVC-MSP
 * JPEG XR
 
-Supported image quality metrics are:
+# Supported Quality Metrics
 
 * YSSIM (luma-only SSIM)
 * DSSIM (luma-only, based on SSIM)
 * RGB-SSIM (average of SSIM applied to R, G, and B channels)
 * PSNR-HVS-M (luma-only)
 
-This test suite is developed primarily on Linux, and secondarily on OS X. Little to no effort has gone into making this work on Windows.
+# Supported Operating Systems
 
-Install all of the requirements listed below, build whatever needs to be built in the requirements, then run 'build-[platform].sh' to build encoders, decoders, and quality tests.
+This test suite is developed and tested on Linux (Fedora 20) and OS X (10.9). It's probably easy to get things working on other versions of Linux and OS X. Little to no effort has gone into getting this working on Windows.
 
-Requirements:
+# Prerequisites
 
 * ImageMagick, specifically the 'convert' utility
   * http://www.imagemagick.org/
@@ -49,3 +49,18 @@ Requirements:
   * https://developers.google.com/speed/webp/download
   * Tested with 0.4.0 release
   * Place directory called "libwebp-0.4.0" alongside this test suite.
+
+# Usage
+
+1. Install required software
+2. Build included encoder/decoder wrappers and metrics programs
+  * OS X: ./build-osx.sh
+  * Linux: ./build-linux.sh
+3. Generate data for desired format and images
+  * $ ./rd_generate.py jpeg images/kodak/*.png
+  * $ ./rd_generate.py mozjpeg images/kodak/*.png
+4. Average data from images
+  * $ ./rd_average.py images/kodak/*.jpeg.out > jpeg.out
+  * $ ./rd_average.py images/kodak/*.mozjpeg.out > mozjpeg.out
+5. Generate graphs
+  * $ ./rd_plot.py jpeg-vs-mozjpeg jpeg.out mozjpeg.out
