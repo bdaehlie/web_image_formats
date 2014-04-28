@@ -47,7 +47,7 @@ This test suite is developed and tested on Linux (Fedora 20) and OS X (10.9). It
   * Place directory called "svn_HEVCSoftware" alongside this test suite.
 * JPEG XR Encoding/Decoding Library
   * git clone https://git01.codeplex.com/jxrlib
-  * Tested with git revision cae40c1
+  * Tested with git revision db41362ccbc7
   * Place directory called "jxrlib" alongside this test suite.
 * WebP Encoding/Decoding Library
   * https://developers.google.com/speed/webp/download
