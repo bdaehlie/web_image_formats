@@ -51,7 +51,7 @@ def main(argv):
   base_name = argv[1]
   data_files = argv[2:]
 
-  proc = subprocess.Popen(shlex.split("type -p gnuplot"), stdout=subprocess.PIPE)
+  proc = subprocess.Popen("type -p gnuplot", stdout=subprocess.PIPE, shell=True)
   out, err = proc.communicate()
   gnuplot = out.strip()
   if not gnuplot:
