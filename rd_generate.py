@@ -145,7 +145,7 @@ def score_y_ssim(y4m1, y4m2):
     sys.stderr.write("Failed process: %s\n" % (yssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  qscore = float(lines[1][7:13])
+  qscore = float(lines[1].rstrip()[7:])
   return qscore
 
 def score_psnrhvsm(y4m1, y4m2):
@@ -156,7 +156,7 @@ def score_psnrhvsm(y4m1, y4m2):
     sys.stderr.write("Failed process: %s\n" % (psnrhvsm))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  qscore = float(lines[1][7:13])
+  qscore = float(lines[1].rstrip()[7:])
   return qscore
 
 def score_rgb_ssim(png1, png2):
@@ -180,7 +180,7 @@ def score_dssim(y4m1, y4m2):
     sys.stderr.write("Failed process: %s\n" % (dssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  qscore = float(lines[1][7:13])
+  qscore = float(lines[1].rstrip()[7:])
   # Return the inverse of the distance to make this result work like the others
   return 1.0 - qscore
 

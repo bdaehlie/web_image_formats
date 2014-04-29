@@ -71,12 +71,12 @@ def main(argv):
   file_count = len(argv) - 1
   i = 0
   while i < len(pixel_total):
-    print "%d %d %s %s %s %s" % (pixel_total[i] / file_count,
-                              file_size_total[i] / file_count,
-                              str(yssim_total[i] / pixel_total[i])[:5],
-                              str(dssim_total[i] / pixel_total[i])[:5],
-                              str(rgb_ssim_total[i] / pixel_total[i])[:5],
-                              str(psnrhvsm_total[i] / pixel_total[i])[:5])
+    print "%d %d %f %f %f %f" % (pixel_total[i] / file_count,
+                                 file_size_total[i] / file_count,
+                                 yssim_total[i] / pixel_total[i],
+                                 dssim_total[i] / pixel_total[i],
+                                 rgb_ssim_total[i] / pixel_total[i],
+                                 psnrhvsm_total[i] / pixel_total[i])
     i += 1
 
 if __name__ == "__main__":
