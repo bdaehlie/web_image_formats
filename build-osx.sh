@@ -27,6 +27,15 @@ echo "Compiling rgbssim..."
 g++ rgbssim.cpp -O2 -o rgbssim -I /opt/local/include/ -I /opt/local/include/opencv/ -I /opt/local/include/opencv2/highgui/ -L/opt/local/lib/ -lopencv_core -lopencv_imgproc -lopencv_highgui || { echo 'Failed!' ; exit 1; }
 cd ../..
 
+cd tests/msssim
+echo "Compiling iqa library..."
+cd iqa-lib
+RELEASE=1 make
+cd ..
+echo "Compiling msssim..."
+gcc -o msssim -Iiqa-lib/include y4m_input.c vidinput.c msssim.c iqa-lib/build/release/libiqa.a -lm || { echo 'Failed!' ; exit 1; }
+cd ../..
+
 # Not used any more, but left in case we use it again in the future.
 # We now use the dssim mode in the 'ssim' program.
 #cd tests/dssim
