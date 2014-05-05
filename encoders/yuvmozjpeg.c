@@ -112,18 +112,13 @@ int main(int argc, char *argv[]) {
 
   jpeg_stdio_dest(&cinfo, jpg_fd);
 
-  cinfo.use_moz_defaults = 2;
+  cinfo.use_moz_defaults = TRUE;
 
   cinfo.image_width = width;
   cinfo.image_height = height;
   cinfo.input_components = 3;
   cinfo.in_color_space = JCS_YCbCr;
   jpeg_set_defaults(&cinfo);
-
-  cinfo.use_flat_quant_tbl = TRUE;
-  cinfo.lambda_log_scale1 = 11.5;
-  cinfo.lambda_log_scale2 = 13.0;
-  cinfo.use_lambda_weight_tbl = FALSE;
 
   cinfo.raw_data_in = TRUE;
   // The following is IJG-only.
