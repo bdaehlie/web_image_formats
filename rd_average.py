@@ -42,6 +42,7 @@ def main(argv):
   dssim_total = array.array('d')
   rgb_ssim_total = array.array('d')
   psnrhvsm_total = array.array('d')
+  msssim_total = array.array('d')
 
   file = open(argv[1], "r")
   for line in file:
@@ -52,6 +53,7 @@ def main(argv):
     dssim_total.append(float(values[3]))
     rgb_ssim_total.append(float(values[4]))
     psnrhvsm_total.append(float(values[5]))
+    msssim_total.append(float(values[6]))
   file.close()
 
   for path in argv[2:]:
@@ -65,6 +67,7 @@ def main(argv):
       dssim_total[i] += float(values[3]) * long(values[0])
       rgb_ssim_total[i] += float(values[4]) * long(values[0])
       psnrhvsm_total[i] += float(values[5]) * long(values[0])
+      msssim_total[i] += float(values[6]) * long(values[0])
       i += 1
     file.close()
 
@@ -76,7 +79,8 @@ def main(argv):
                                  yssim_total[i] / pixel_total[i],
                                  dssim_total[i] / pixel_total[i],
                                  rgb_ssim_total[i] / pixel_total[i],
-                                 psnrhvsm_total[i] / pixel_total[i])
+                                 psnrhvsm_total[i] / pixel_total[i],
+                                 msssim_total[i] / pixel_total[i])
     i += 1
 
 if __name__ == "__main__":

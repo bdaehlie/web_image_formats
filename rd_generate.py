@@ -48,6 +48,7 @@ rgbssim = "./tests/rgbssim/rgbssim"
 yssim = "./tests/ssim/ssim -y"
 dssim = "./tests/ssim/ssim -y -d"
 psnrhvsm = "./tests/psnrhvsm/psnrhvsm -y"
+msssim = "./tests/msssim/msssim -y"
 
 # HEVC config file
 hevc_config = "../svn_HEVCSoftware/trunk/cfg/encoder_intra_main.cfg"
@@ -184,8 +185,19 @@ def score_dssim(y4m1, y4m2):
   # Return the inverse of the distance to make this result work like the others
   return 1.0 - qscore
 
+def score_msssim(y4m1, y4m2):
+  cmd = "%s %s %s" % (msssim, y4m1, y4m2)
+  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  out, err = proc.communicate()
+  if proc.returncode != 0:
+    sys.stderr.write("Failed process: %s\n" % (msssim))
+    sys.exit(proc.returncode)
+  lines = out.split(os.linesep)
+  qscore = float(lines[1].rstrip()[7:])
+  return qscore
+
 # Returns tuple containing:
-#   (file_size, yssim_score, dssim_score, rgbssim_score, psnrhvsm_score)
+#   (file_size, yssim_score, dssim_score, rgbssim_score, psnrhvsm_score, msssim_score)
 def get_results(png, format, quality):
   width = get_png_width(png)
   height = get_png_height(png)
@@ -246,6 +258,7 @@ def get_results(png, format, quality):
   dssim_score = score_dssim(png_yuv_y4m, png_yuv_target_yuv_y4m)
   rgb_ssim_score = score_rgb_ssim(png, png_yuv_target_yuv_png)
   psnrhvsm_score = score_psnrhvsm(png_yuv_y4m, png_yuv_target_yuv_y4m)
+  msssim_score = score_msssim(png_yuv_y4m, png_yuv_target_yuv_y4m)
 
   os.remove(png_yuv)
   os.remove(png_yuv_y4m)
@@ -254,7 +267,7 @@ def get_results(png, format, quality):
   os.remove(png_yuv_target_yuv_y4m)
   os.remove(png_yuv_target_yuv_png)
 
-  return (target_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score)
+  return (target_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score, msssim_score)
 
 def process_image(args):
   [format, png] = args;
@@ -269,7 +282,7 @@ def process_image(args):
   while i < len(quality_list):
     q = quality_list[i]
     results = get_results(png, format, q)
-    file.write("%d %d %s %s %s %s\n" % (pixels, results[0], str(results[1])[:5], str(results[2])[:5], str(results[3])[:5], str(results[4])[:5]))
+    file.write("%d %d %s %s %s %s %s\n" % (pixels, results[0], str(results[1])[:5], str(results[2])[:5], str(results[3])[:5], str(results[4])[:5], str(results[5])[:5]))
     i += 1
 
   file.close()

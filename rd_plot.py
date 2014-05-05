@@ -64,6 +64,7 @@ def main(argv):
   dssim = "%s -e \"%s set ylabel 'Quality (dssim)'; set output '%s-dssim.png'; plot " % (gnuplot, base_cmds, base_name)
   rgbssim = "%s -e \"%s set ylabel 'Quality (rgbssim)'; set output '%s-rgbssim.png'; plot " % (gnuplot, base_cmds, base_name)
   psnrhvsm = "%s -e \"%s set ylabel 'Quality (psnrhvsm)'; set output '%s-psnrhvsm.png'; plot " % (gnuplot, base_cmds, base_name)
+  msssim = "%s -e \"%s set ylabel 'Quality (msssim)'; set output '%s-msssim.png'; plot " % (gnuplot, base_cmds, base_name)
 
   prefix = ""
   for file in data_files:
@@ -72,6 +73,7 @@ def main(argv):
     dssim += "%s'%s' using ($2*8/$1):4 with lines title '%s'" % (prefix, file, data_label)
     rgbssim += "%s'%s' using ($2*8/$1):5 with lines title '%s'" % (prefix, file, data_label)
     psnrhvsm += "%s'%s' using ($2*8/$1):6 with lines title '%s'" % (prefix, file, data_label)
+    msssim += "%s'%s' using ($2*8/$1):7 with lines title '%s'" % (prefix, file, data_label)
     prefix = ", "
 
   yssim += ";\""
@@ -82,6 +84,8 @@ def main(argv):
   run_silent(rgbssim)
   psnrhvsm += ";\""
   run_silent(psnrhvsm)
+  msssim += ";\""
+  run_silent(msssim)
 
 if __name__ == "__main__":
   main(sys.argv)
