@@ -56,7 +56,7 @@ def main(argv):
     msssim_total.append(float(values[6]))
   file.close()
 
-  for path in argv[2:]:
+  for path in argv[1:]:
     file = open(path, "r")
     i = 0
     for line in file:
@@ -74,7 +74,7 @@ def main(argv):
   file_count = len(argv) - 1
   i = 0
   while i < len(pixel_total):
-    print "%d %d %f %f %f %f" % (pixel_total[i] / file_count,
+    print "%d %d %f %f %f %f %f" % (pixel_total[i] / file_count,
                                  file_size_total[i] / file_count,
                                  yssim_total[i] / pixel_total[i],
                                  dssim_total[i] / pixel_total[i],
