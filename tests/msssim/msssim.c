@@ -132,7 +132,7 @@ int main(int _argc,char *_argv[]){
   gssim[0]=gssim[1]=gssim[2]=0;
   /*We just use a simple weighting to get a single full-color score.
     In reality the CSF for chroma is not the same as luma.*/
-  cweight=0.25*(4>>!(info1.pixel_fmt&1)+!(info1.pixel_fmt&2));
+  cweight=0.25*(4>>(!(info1.pixel_fmt&1)+!(info1.pixel_fmt&2)));
   for(frameno=0;;frameno++){
     video_input_ycbcr f1;
     video_input_ycbcr f2;
@@ -173,8 +173,8 @@ int main(int _argc,char *_argv[]){
       
       ssim[pli]=iqa_ms_ssim(f1[pli].data+(info1.pic_y>>ydec)*f1[pli].stride+(info1.pic_x>>xdec),
                             f2[pli].data+(info2.pic_y>>ydec)*f2[pli].stride+(info2.pic_x>>xdec),
-                            (info1.pic_x+info1.pic_w+xdec>>xdec)-(info1.pic_x>>xdec),
-                            (info1.pic_y+info1.pic_h+ydec>>ydec)-(info1.pic_y>>ydec),
+                            ((info1.pic_x+info1.pic_w+xdec)>>xdec)-(info1.pic_x>>xdec),
+                            ((info1.pic_y+info1.pic_h+ydec)>>ydec)-(info1.pic_y>>ydec),
                             f1[pli].stride
                             ,&ms_args);
       gssim[pli]+=ssim[pli];
