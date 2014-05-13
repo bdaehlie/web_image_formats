@@ -33,7 +33,7 @@ cd iqa-lib
 RELEASE=1 make
 cd ..
 echo "Compiling msssim..."
-gcc -o msssim -Iiqa-lib/include y4m_input.c vidinput.c msssim.c iqa-lib/build/release/libiqa.a -lm || { echo 'Failed!' ; exit 1; }
+gcc -o msssim -Iiqa-lib/include -I../common ../common/y4m_input.c ../common/vidinput.c msssim.c iqa-lib/build/release/libiqa.a -lm || { echo 'Failed!' ; exit 1; }
 cd ../..
 
 # Not used any more, but left in case we use it again in the future.
@@ -45,12 +45,12 @@ cd ../..
 
 cd tests/ssim
 echo "Compiling ssim..."
-gcc -o ssim vidinput.c y4m_input.c ssim.c -lm || { echo 'Failed!' ; exit 1; }
+gcc -o ssim -I../common ../common/vidinput.c ../common/y4m_input.c ssim.c -lm || { echo 'Failed!' ; exit 1; }
 cd ../..
 
 cd tests/psnrhvsm
 echo "Compiling psnrhvsm..."
-gcc -o psnrhvsm vidinput.c y4m_input.c psnrhvs.c -lm || { echo 'Failed!' ; exit 1; }
+gcc -o psnrhvsm -I../common ../common/vidinput.c ../common/y4m_input.c psnrhvs.c -lm || { echo 'Failed!' ; exit 1; }
 cd ../..
 
 echo "Success building all encoders and decoders."
