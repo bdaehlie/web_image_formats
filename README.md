@@ -60,9 +60,9 @@ This test suite is developed and tested on Linux (Fedora 20) and OS X (10.9). It
 2. Build included encoder/decoder wrappers and metrics programs
   * OS X: ./build-osx.sh
   * Linux: ./build-linux.sh
-3. Generate data for desired format and images
-  * $ ./rd_generate.py jpeg images/kodak/*.png
-  * $ ./rd_generate.py mozjpeg images/kodak/*.png
+3. Collect data for desired format and images
+  * $ ./rd_collect.py jpeg images/kodak/*.png
+  * $ ./rd_collect.py mozjpeg images/kodak/*.png
 4. Average data from images
   * $ ./rd_average.py images/kodak/*.jpeg.out > jpeg.out
   * $ ./rd_average.py images/kodak/*.mozjpeg.out > mozjpeg.out
