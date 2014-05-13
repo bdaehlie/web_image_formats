@@ -34,16 +34,23 @@ import math
 import shlex
 from multiprocessing import Pool
 
-# Paths to various programs used by the tests
+######## Paths to various programs and config files used by the tests #########
+# Conversion
+convert = "convert"
+
+# Encoders and Decoders
 yuvjpeg = "./encoders/yuvjpeg"
 yuvmozjpeg = "./encoders/yuvmozjpeg"
-jpegyuv = "./decoders/jpegyuv"
 yuvwebp = "./encoders/yuvwebp"
-webpyuv = "./decoders/webpyuv"
 yuvjxr = "./encoders/yuvjxr"
-jxryuv = "./decoders/jxryuv"
-convert = "convert"
 chevc = "../svn_HEVCSoftware/trunk/bin/TAppEncoderStatic"
+
+# Decoders
+jpegyuv = "./decoders/jpegyuv"
+webpyuv = "./decoders/webpyuv"
+jxryuv = "./decoders/jxryuv"
+
+# Tests
 rgbssim = "./tests/rgbssim/rgbssim"
 yssim = "./tests/ssim/ssim -y"
 dssim = "./tests/ssim/ssim -y -d"
@@ -55,6 +62,7 @@ hevc_config = "../svn_HEVCSoftware/trunk/cfg/encoder_intra_main.cfg"
 
 # Path to tmp dir to be used by the tests
 tmpdir = "/tmp/"
+###############################################################################
 
 def run_silent(cmd):
   FNULL = open(os.devnull, 'w')
