@@ -60,10 +60,10 @@ def main(argv):
 
   base_cmds = ("set term png size 1024,768; set log x; set xlabel 'Bits/Pixel'; set key bot right;")
 
-  yssim = "%s -e \"%s set ylabel 'Quality (yssim)'; set output '%s-yssim.png'; plot " % (gnuplot, base_cmds, base_name)
-  rgbssim = "%s -e \"%s set ylabel 'Quality (rgbssim)'; set output '%s-rgbssim.png'; plot " % (gnuplot, base_cmds, base_name)
-  psnrhvsm = "%s -e \"%s set ylabel 'Quality (psnrhvsm)'; set output '%s-psnrhvsm.png'; plot " % (gnuplot, base_cmds, base_name)
-  msssim = "%s -e \"%s set ylabel 'Quality (msssim)'; set output '%s-msssim.png'; plot " % (gnuplot, base_cmds, base_name)
+  yssim = "%s -e \"%s set ylabel 'dB (yssim)'; set output '%s-yssim.png'; plot " % (gnuplot, base_cmds, base_name)
+  rgbssim = "%s -e \"%s set ylabel 'dB (rgbssim)'; set output '%s-rgbssim.png'; plot " % (gnuplot, base_cmds, base_name)
+  psnrhvsm = "%s -e \"%s set ylabel 'dB (psnrhvsm)'; set output '%s-psnrhvsm.png'; plot " % (gnuplot, base_cmds, base_name)
+  msssim = "%s -e \"%s set ylabel 'dB (msssim)'; set output '%s-msssim.png'; plot " % (gnuplot, base_cmds, base_name)
 
   prefix = ""
   for file in data_files:
