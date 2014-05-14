@@ -15,11 +15,10 @@
 
 
 
-const char *optstring = "bdfsy";
+const char *optstring = "frsy";
 const struct option options[]={
-  {"db",no_argument,NULL,'b'},
-  {"dssim",no_argument,NULL,'d'},
   {"frame-type",no_argument,NULL,'f'},
+  {"raw",no_argument,NULL,'r'},
   {"summary",no_argument,NULL,'s'},
   {"luma-only",no_argument,NULL,'y'},
   {NULL,0,NULL,0}
@@ -28,7 +27,6 @@ const struct option options[]={
 static int show_frame_type;
 static int summary_only;
 static int luma_only;
-
 
 #define KERNEL_SHIFT (8)
 #define KERNEL_WEIGHT (1<<KERNEL_SHIFT)
@@ -186,9 +184,8 @@ static void usage(char *_argv[]){
   fprintf(stderr,"Usage: %s [options] <video1> <video2>\n"
    "    <video1> and <video2> may be either YUV4MPEG or Ogg Theora files.\n\n"
    "    Options:\n\n"
-   "      -b --db         Calculate dB: 10*log10(1/(1-ssim)).\n"
-   "      -d --dssim      Calculate dssim: 1/ssim-1.\n"
    "      -f --frame-type Show frame type and QI value for each Theora frame.\n"
+   "      -r --raw        Show raw scores, not coverted to dB\n"
    "      -s --summary    Only output the summary line.\n"
    "      -y --luma-only  Only output values for the luma channel.\n",_argv[0]);
 }
@@ -197,10 +194,6 @@ typedef double (*convert_ssim_func)(double _ssim,double _weight);
 
 static double convert_ssim_raw(double _ssim,double _weight){
   return _ssim/_weight;
-}
-
-static double convert_dssim_raw(double _ssim,double _weight){
-  return (1.0 / (_ssim / _weight)) - 1;
 }
 
 static double convert_ssim_db(double _ssim,double _weight){
@@ -228,12 +221,11 @@ int main(int _argc,char *_argv[]){
   _setmode(_fileno(stdin),_O_BINARY);
 #endif
   /*Process option arguments.*/
-  convert=convert_ssim_raw;
+  convert=convert_ssim_db;
   while((c=getopt_long(_argc,_argv,optstring,options,&long_option_index))!=EOF){
     switch(c){
-      case 'b':convert=convert_ssim_db;break;
-      case 'd':convert=convert_dssim_raw;break;
       case 'f':show_frame_type=1;break;
+      case 'r':convert=convert_ssim_raw;
       case 's':summary_only=1;break;
       case 'y':luma_only=1;break;
       default:{

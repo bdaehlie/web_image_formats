@@ -61,7 +61,6 @@ def main(argv):
   base_cmds = ("set term png size 1024,768; set log x; set xlabel 'Bits/Pixel'; set key bot right;")
 
   yssim = "%s -e \"%s set ylabel 'Quality (yssim)'; set output '%s-yssim.png'; plot " % (gnuplot, base_cmds, base_name)
-  dssim = "%s -e \"%s set ylabel 'Quality (dssim)'; set output '%s-dssim.png'; plot " % (gnuplot, base_cmds, base_name)
   rgbssim = "%s -e \"%s set ylabel 'Quality (rgbssim)'; set output '%s-rgbssim.png'; plot " % (gnuplot, base_cmds, base_name)
   psnrhvsm = "%s -e \"%s set ylabel 'Quality (psnrhvsm)'; set output '%s-psnrhvsm.png'; plot " % (gnuplot, base_cmds, base_name)
   msssim = "%s -e \"%s set ylabel 'Quality (msssim)'; set output '%s-msssim.png'; plot " % (gnuplot, base_cmds, base_name)
@@ -70,16 +69,13 @@ def main(argv):
   for file in data_files:
     data_label = os.path.splitext(os.path.basename(file))[0]
     yssim += "%s'%s' using ($2*8/$1):3 with lines title '%s'" % (prefix, file, data_label)
-    dssim += "%s'%s' using ($2*8/$1):4 with lines title '%s'" % (prefix, file, data_label)
-    rgbssim += "%s'%s' using ($2*8/$1):5 with lines title '%s'" % (prefix, file, data_label)
-    psnrhvsm += "%s'%s' using ($2*8/$1):6 with lines title '%s'" % (prefix, file, data_label)
-    msssim += "%s'%s' using ($2*8/$1):7 with lines title '%s'" % (prefix, file, data_label)
+    rgbssim += "%s'%s' using ($2*8/$1):4 with lines title '%s'" % (prefix, file, data_label)
+    psnrhvsm += "%s'%s' using ($2*8/$1):5 with lines title '%s'" % (prefix, file, data_label)
+    msssim += "%s'%s' using ($2*8/$1):6 with lines title '%s'" % (prefix, file, data_label)
     prefix = ", "
 
   yssim += ";\""
   run_silent(yssim)
-  dssim += ";\""
-  run_silent(dssim)
   rgbssim += ";\""
   run_silent(rgbssim)
   psnrhvsm += ";\""

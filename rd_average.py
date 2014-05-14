@@ -39,7 +39,6 @@ def main(argv):
   pixel_total = array.array('l')
   file_size_total = array.array('l')
   yssim_total = array.array('d')
-  dssim_total = array.array('d')
   rgb_ssim_total = array.array('d')
   psnrhvsm_total = array.array('d')
   msssim_total = array.array('d')
@@ -49,14 +48,13 @@ def main(argv):
     values = line.rstrip().split()
     pixel_total.append(long(values[0]))
     file_size_total.append(long(values[1]))
-    yssim_total.append(float(values[2]))
-    dssim_total.append(float(values[3]))
-    rgb_ssim_total.append(float(values[4]))
-    psnrhvsm_total.append(float(values[5]))
-    msssim_total.append(float(values[6]))
+    yssim_total.append(float(values[2]) * long(values[0]))
+    rgb_ssim_total.append(float(values[3]) * long(values[0]))
+    psnrhvsm_total.append(float(values[4]) * long(values[0]))
+    msssim_total.append(float(values[5]) * long(values[0]))
   file.close()
 
-  for path in argv[1:]:
+  for path in argv[2:]:
     file = open(path, "r")
     i = 0
     for line in file:
@@ -64,20 +62,18 @@ def main(argv):
       pixel_total[i] += long(values[0])
       file_size_total[i] += long(values[1])
       yssim_total[i] += float(values[2]) * long(values[0])
-      dssim_total[i] += float(values[3]) * long(values[0])
-      rgb_ssim_total[i] += float(values[4]) * long(values[0])
-      psnrhvsm_total[i] += float(values[5]) * long(values[0])
-      msssim_total[i] += float(values[6]) * long(values[0])
+      rgb_ssim_total[i] += float(values[3]) * long(values[0])
+      psnrhvsm_total[i] += float(values[4]) * long(values[0])
+      msssim_total[i] += float(values[5]) * long(values[0])
       i += 1
     file.close()
 
   file_count = len(argv) - 1
   i = 0
   while i < len(pixel_total):
-    print "%d %d %f %f %f %f %f" % (pixel_total[i] / file_count,
+    print "%d %d %f %f %f %f" % (pixel_total[i] / file_count,
                                  file_size_total[i] / file_count,
                                  yssim_total[i] / pixel_total[i],
-                                 dssim_total[i] / pixel_total[i],
                                  rgb_ssim_total[i] / pixel_total[i],
                                  psnrhvsm_total[i] / pixel_total[i],
                                  msssim_total[i] / pixel_total[i])

@@ -51,11 +51,10 @@ webpyuv = "./decoders/webpyuv"
 jxryuv = "./decoders/jxryuv"
 
 # Tests
-rgbssim = "./tests/rgbssim/rgbssim"
-yssim = "./tests/ssim/ssim -y"
-dssim = "./tests/ssim/ssim -y -d"
-psnrhvsm = "./tests/psnrhvsm/psnrhvsm -y"
-msssim = "./tests/msssim/msssim -y"
+rgbssim = "./tests/ssim/ssim -s"
+yssim = "./tests/ssim/ssim -s -y"
+psnrhvsm = "./tests/psnrhvsm/psnrhvsm -s -y"
+msssim = "./tests/msssim/msssim -s -y"
 
 # HEVC config file
 hevc_config = "../svn_HEVCSoftware/trunk/cfg/encoder_intra_main.cfg"
@@ -154,7 +153,7 @@ def score_y_ssim(y4m1, y4m2):
     sys.stderr.write("Failed process: %s\n" % (yssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  qscore = float(lines[1].rstrip()[7:])
+  qscore = float(lines[0].rstrip()[7:])
   return qscore
 
 def score_psnrhvsm(y4m1, y4m2):
@@ -165,33 +164,19 @@ def score_psnrhvsm(y4m1, y4m2):
     sys.stderr.write("Failed process: %s\n" % (psnrhvsm))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  qscore = float(lines[1].rstrip()[7:])
+  qscore = float(lines[0].rstrip()[7:])
   return qscore
 
-def score_rgb_ssim(png1, png2):
-  cmd = "%s %s %s" % (rgbssim, png1, png2)
+def score_rgb_ssim(y4m1, y4m2):
+  cmd = "%s %s %s" % (rgbssim, y4m1, y4m2)
   proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
   out, err = proc.communicate()
   if proc.returncode != 0:
     sys.stderr.write("Failed process: %s\n" % (rgbssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  r = float(lines[1].strip().strip('%'))
-  g = float(lines[2].strip().strip('%'))
-  b = float(lines[3].strip().strip('%'))
-  return (((r + g + b) / 3) / 100)
-
-def score_dssim(y4m1, y4m2):
-  cmd = "%s %s %s" % (dssim, y4m1, y4m2)
-  proc = subprocess.Popen(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  out, err = proc.communicate()
-  if proc.returncode != 0:
-    sys.stderr.write("Failed process: %s\n" % (dssim))
-    sys.exit(proc.returncode)
-  lines = out.split(os.linesep)
-  qscore = float(lines[1].rstrip()[7:])
-  # Return the inverse of the distance to make this result work like the others
-  return 1.0 - qscore
+  qscore = float(lines[0].split(' ', 2)[1])
+  return qscore
 
 def score_msssim(y4m1, y4m2):
   cmd = "%s %s %s" % (msssim, y4m1, y4m2)
@@ -201,11 +186,11 @@ def score_msssim(y4m1, y4m2):
     sys.stderr.write("Failed process: %s\n" % (msssim))
     sys.exit(proc.returncode)
   lines = out.split(os.linesep)
-  qscore = float(lines[1].rstrip()[7:])
+  qscore = float(lines[0].rstrip()[7:])
   return qscore
 
 # Returns tuple containing:
-#   (file_size, yssim_score, dssim_score, rgbssim_score, psnrhvsm_score, msssim_score)
+#   (file_size, yssim_score, rgbssim_score, psnrhvsm_score, msssim_score)
 def get_results(png, format, quality):
   width = get_png_width(png)
   height = get_png_height(png)
@@ -253,9 +238,6 @@ def get_results(png, format, quality):
   png_yuv_target_yuv_y4m = png_yuv_target_yuv + ".y4m"
   yuv_to_y4m(width, height, png_yuv_target_yuv, png_yuv_target_yuv_y4m)
 
-  png_yuv_target_yuv_png = png_yuv_target_yuv + ".png"
-  yuv_to_png(width, height, png_yuv_target_yuv, png_yuv_target_yuv_png)
-
   target_file_size = os.path.getsize(png_yuv_target)
   if format == "hevc":
     target_file_size += 80 # Penalize HEVC bit streams for not having a container like
@@ -263,8 +245,7 @@ def get_results(png, format, quality):
                            # 1x1 pixel hevc file is 84 bytes.
 
   yssim_score = score_y_ssim(png_yuv_y4m, png_yuv_target_yuv_y4m)
-  dssim_score = score_dssim(png_yuv_y4m, png_yuv_target_yuv_y4m)
-  rgb_ssim_score = score_rgb_ssim(png, png_yuv_target_yuv_png)
+  rgb_ssim_score = score_rgb_ssim(png_yuv_y4m, png_yuv_target_yuv_y4m)
   psnrhvsm_score = score_psnrhvsm(png_yuv_y4m, png_yuv_target_yuv_y4m)
   msssim_score = score_msssim(png_yuv_y4m, png_yuv_target_yuv_y4m)
 
@@ -273,9 +254,8 @@ def get_results(png, format, quality):
   os.remove(png_yuv_target)
   os.remove(png_yuv_target_yuv)
   os.remove(png_yuv_target_yuv_y4m)
-  os.remove(png_yuv_target_yuv_png)
 
-  return (target_file_size, yssim_score, dssim_score, rgb_ssim_score, psnrhvsm_score, msssim_score)
+  return (target_file_size, yssim_score, rgb_ssim_score, psnrhvsm_score, msssim_score)
 
 def process_image(args):
   [format, png] = args;
@@ -290,7 +270,7 @@ def process_image(args):
   while i < len(quality_list):
     q = quality_list[i]
     results = get_results(png, format, q)
-    file.write("%d %d %s %s %s %s %s\n" % (pixels, results[0], str(results[1])[:5], str(results[2])[:5], str(results[3])[:5], str(results[4])[:5], str(results[5])[:5]))
+    file.write("%d %d %s %s %s %s\n" % (pixels, results[0], str(results[1])[:5], str(results[2])[:5], str(results[3])[:5], str(results[4])[:5]))
     i += 1
 
   file.close()
