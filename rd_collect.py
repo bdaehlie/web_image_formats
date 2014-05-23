@@ -116,28 +116,24 @@ def yuv_to_y4m(width, height, yuv, out_y4m):
   out_file.write(yuv_bytes)
   out_file.close()
 
+# We return only around the top 75% of quality options.
+# Almost nobody uses the bottom 25%.
 def quality_list_for_format(format):
   possible_q = []
-  if format == 'jpeg' or format == 'mozjpeg':
-    q = 0
+  if format == 'jpeg' or format == 'mozjpeg' or format == 'webp':
+    q = 25
     while q < 101:
       possible_q.append(q)
       q += 1
     return possible_q
   if format == 'hevc':
-    q = 50
+    q = 37
     while q >= 0.0:
       possible_q.append(q)
       q -= 0.5
     return possible_q
-  if format == 'webp':
-    q = 0
-    while q < 101:
-      possible_q.append(q)
-      q += 1
-    return possible_q
   if format == 'jxr':
-    q = 0
+    q = 25
     while q < 100:
       possible_q.append(q)
       q += 1
