@@ -43,6 +43,26 @@
 #include "jpeglib.h"
 
 int main(int argc, char *argv[]) {
+  const char *jpg_path;
+  const char *yuv_path;
+  struct jpeg_decompress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  FILE *jpg_fd;
+  int width;
+  int height;
+  int frame_width;
+  int frame_height;
+  int yuv_size;
+  JSAMPLE *image_buffer;
+  JSAMPROW yrow_pointer[16];
+  JSAMPROW cbrow_pointer[8];
+  JSAMPROW crrow_pointer[8];
+  JSAMPROW *plane_pointer[3];
+  unsigned char *yuv_buffer;
+  int x;
+  int y;
+  FILE *yuv_fd;
+
   if (argc != 3) {
     fprintf(stderr, "Required arguments:\n");
     fprintf(stderr, "1. Path to JPG input file\n");
@@ -53,15 +73,13 @@ int main(int argc, char *argv[]) {
   errno = 0;
 
   /* Will check these for validity when opening via 'fopen'. */
-  const char *jpg_path = argv[1];
-  const char *yuv_path = argv[2];
+  jpg_path = argv[1];
+  yuv_path = argv[2];
 
-  struct jpeg_decompress_struct cinfo;
-  struct jpeg_error_mgr jerr;
   cinfo.err = jpeg_std_error(&jerr);
   jpeg_create_decompress(&cinfo);
 
-  FILE *jpg_fd = fopen(jpg_path, "rb");
+  jpg_fd = fopen(jpg_path, "rb");
   if (!jpg_fd) {
     fprintf(stderr, "Invalid path to JPEG file!\n");
     return 1;
@@ -76,36 +94,48 @@ int main(int argc, char *argv[]) {
 
   jpeg_start_decompress(&cinfo);
 
-  int width = cinfo.output_width;
-  int height = cinfo.output_height;
-  /* Right now we only support dimensions that are multiples of 16. */
-  if ((width % 16) != 0 || (height % 16) != 0) {
-    fprintf(stderr, "Image dimensions must be multiples of 16!\n");
-    return 1;
-  }
+  width = cinfo.output_width;
+  height = cinfo.output_height;
 
-  int yuv_size = (width * height) + (((width >> 1) * (height >> 1)) * 2);
-  JSAMPLE *image_buffer = malloc(yuv_size);
+  yuv_size = (width * height) + (((width + 1) >> 1) * ((height + 1) >> 1) << 1);
+  yuv_buffer = malloc(yuv_size);
 
-  JSAMPROW yrow_pointer[16];
-  JSAMPROW cbrow_pointer[8];
-  JSAMPROW crrow_pointer[8];
-  JSAMPROW *plane_pointer[3];
+  frame_width = (width + (16 - 1)) & ~(16 - 1);
+  frame_height = (height + (16 - 1)) & ~(16 -1);
+
+  image_buffer = malloc((frame_width + (frame_width >> 1)) << 4);
+
   plane_pointer[0] = yrow_pointer;
   plane_pointer[1] = cbrow_pointer;
   plane_pointer[2] = crrow_pointer;
+
+  for (y = 0; y < 16; y++) {
+    yrow_pointer[y] = image_buffer + frame_width*y;
+  }
+  for (y = 0; y < 8; y++) {
+    cbrow_pointer[y] = image_buffer + frame_width*16 + (frame_width>>1)*y;
+    crrow_pointer[y] = image_buffer + frame_width*16 + (frame_width>>1)*8 + (frame_width>>1)*y;
+  }
+
   while (cinfo.output_scanline < cinfo.output_height) {
-    for (int y = 0; y < 16; y++) {
-      yrow_pointer[y] = image_buffer + cinfo.image_width * (cinfo.output_scanline + y);
-    }
-    for (int y = 0; y < 8; y++) {
-      cbrow_pointer[y] = image_buffer + width * height +
-                         ((width + 1) >> 1) * ((cinfo.output_scanline >> 1) + y);
-      crrow_pointer[y] = image_buffer + width * height +
-                         ((width + 1) >> 1) * ((height + 1) >> 1) +
-                         ((width + 1) >> 1) * ((cinfo.output_scanline >> 1) + y);
-    }
+    int scanline;
+    scanline = cinfo.output_scanline;
+
     jpeg_read_raw_data(&cinfo, plane_pointer, 16);
+
+    for (y = 0; y < 16 && scanline + y < height; y++) {
+      for (x = 0; x < width; x++) {
+        yuv_buffer[width*(scanline + y) + x] = yrow_pointer[y][x];
+      }
+    }
+    for (y = 0; y < 8 && (scanline >> 1) + y < (height + 1) >> 1; y++) {
+      for (x = 0; x < (width + 1) >> 1; x++) {
+        yuv_buffer[width*height + ((width + 1) >> 1)*((scanline >> 1) + y) +
+         x] = cbrow_pointer[y][x];
+        yuv_buffer[width*height + ((width + 1) >> 1)*(((height + 1) >> 1) +
+         ((scanline >> 1) + y)) + x] = crrow_pointer[y][x];
+      }
+    }
   }
 
   jpeg_finish_decompress(&cinfo);
@@ -114,13 +144,19 @@ int main(int argc, char *argv[]) {
 
   fclose(jpg_fd);
 
-  FILE *yuv_fd = fopen(yuv_path, "wb");
+  free(image_buffer);
+
+  yuv_fd = fopen(yuv_path, "wb");
   if (!yuv_fd) {
     fprintf(stderr, "Invalid path to YUV file!");
     return 1;
   }
-  fwrite(image_buffer, yuv_size, 1, yuv_fd);
+  if (fwrite(yuv_buffer, yuv_size, 1, yuv_fd)!=1) {
+    fprintf(stderr, "Error writing yuv file\n");
+  }
   fclose(yuv_fd);
+
+  free(yuv_buffer);
 
   return 0;
 }

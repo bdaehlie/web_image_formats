@@ -42,10 +42,33 @@
 #include "jpeglib.h"
 
 int main(int argc, char *argv[]) {
+  long quality;
+  const char *size;
+  char *p;
+  long width;
+  long height;
+  int frame_width;
+  int frame_height;
+  const char *yuv_path;
+  const char *jpg_path;
+  FILE *yuv_fd;
+  size_t yuv_size;
+  unsigned char *yuv_buffer;
+  JSAMPLE *image_buffer;
+  struct jpeg_compress_struct cinfo;
+  struct jpeg_error_mgr jerr;
+  FILE *jpg_fd;
+  JSAMPROW yrow_pointer[16];
+  JSAMPROW cbrow_pointer[8];
+  JSAMPROW crrow_pointer[8];
+  JSAMPROW *plane_pointer[3];
+  int x;
+  int y;
+
   if (argc != 5) {
     fprintf(stderr, "Required arguments:\n");
     fprintf(stderr, "1. JPEG quality value, 0-100\n");
-    fprintf(stderr, "2. Image size (e.g. '512x512')\n");
+    fprintf(stderr, "2. Image size (e.g. '512x512)'\n");
     fprintf(stderr, "3. Path to YUV input file\n");
     fprintf(stderr, "4. Path to JPG output file\n");
     return 1;
@@ -53,58 +76,105 @@ int main(int argc, char *argv[]) {
 
   errno = 0;
 
-  long quality = strtol(argv[1], NULL, 10);
+  quality = strtol(argv[1], NULL, 10);
   if (errno != 0 || quality < 0 || quality > 100) {
     fprintf(stderr, "Invalid JPEG quality value!\n");
     return 1;
   }
 
-  const char *size = argv[2];
-  char *x = strchr(size, 'x');
-  if (!x && x != size && x != (x + strlen(x) - 1)) {
+  size = argv[2];
+  p = strchr(size, 'x');
+  if (!p && p != size && p != (p + strlen(p) - 1)) {
     fprintf(stderr, "Invalid image size input!\n");
     return 1;
   }
-  long width = strtol(size, NULL, 10);
+  width = strtol(size, NULL, 10);
   if (errno != 0) {
     fprintf(stderr, "Invalid image size input!\n");
     return 1;
   }
-  long height = strtol(x + 1, NULL, 10);
+  height = strtol(p + 1, NULL, 10);
   if (errno != 0) {
     fprintf(stderr, "Invalid image size input!\n");
     return 1;
   }
-  /* Right now we only support dimensions that are multiples of 16. */
-  if ((width % 16) != 0 || (height % 16) != 0) {
-    fprintf(stderr, "Image dimensions must be multiples of 16!\n");
-    return 1;
-  }
+
+  frame_width = (width + (16 - 1)) & ~(16 - 1);
+  frame_height = (height + (16 - 1)) & ~(16 -1);
 
   /* Will check these for validity when opening via 'fopen'. */
-  const char *yuv_path = argv[3];
-  const char *jpg_path = argv[4];
+  yuv_path = argv[3];
+  jpg_path = argv[4];
 
-  FILE *yuv_fd = fopen(yuv_path, "r");
+  yuv_fd = fopen(yuv_path, "r");
   if (!yuv_fd) {
     fprintf(stderr, "Invalid path to YUV file!\n");
     return 1;
   }
 
   fseek(yuv_fd, 0, SEEK_END);
-  long yuv_size = ftell(yuv_fd);
+  yuv_size = ftell(yuv_fd);
+  /* XXX - Add error checking for the file size */
   fseek(yuv_fd, 0, SEEK_SET);
-  JSAMPLE *image_buffer = malloc(yuv_size);
-  fread(image_buffer, yuv_size, 1, yuv_fd);
+  yuv_buffer = malloc(yuv_size);
+  if (fread(yuv_buffer, yuv_size, 1, yuv_fd)!=1) {
+    fprintf(stderr, "Error reading yuv file\n");
+  };
 
   fclose(yuv_fd);
 
-  struct jpeg_compress_struct cinfo;
-  struct jpeg_error_mgr jerr;
+  image_buffer = malloc((frame_width + (frame_width >> 1)) * frame_height);
+
+  for (y = 0; y < height; y++) {
+    for (x = 0; x < width; x++) {
+      image_buffer[frame_width*y + x] = yuv_buffer[width*y + x];
+    }
+  }
+  for (y = 0; y < (height + 1) >> 1; y++) {
+    for (x = 0; x < (width + 1) >> 1; x++) {
+      image_buffer[frame_width*frame_height + (frame_width >> 1)*y + x] =
+       yuv_buffer[width*height + ((width + 1) >> 1)*y + x];
+      image_buffer[frame_width*frame_height + (frame_width >> 1)*((frame_height >> 1) + y) + x] =
+       yuv_buffer[width*height + ((width + 1) >> 1)*(((height + 1) >> 1) + y) + x];
+    }
+  }
+
+  free(yuv_buffer);
+
+  /* Perform right edge extension. */
+  for (y = 0; y < height; y++) {
+    for (x = width; x < frame_width; x++) {
+      image_buffer[frame_width*y + x] = image_buffer[frame_width*y + x - 1];
+    }
+  }
+  for (y = 0; y < (height + 1) >> 1; y++) {
+    for (x = (width + 1) >> 1; x < frame_width >> 1; x++) {
+      image_buffer[frame_width*frame_height + (frame_width >> 1)*y + x] =
+       image_buffer[frame_width*frame_height + (frame_width >> 1)*y + x - 1];
+      image_buffer[frame_width*frame_height + (frame_width >> 1)*((frame_height >> 1) + y) + x] =
+       image_buffer[frame_width*frame_height + (frame_width >> 1)*((frame_height >> 1) + y) + x - 1];
+    }
+  }
+
+  /* Perform bottom edge extension. */
+  for (x = 0; x < frame_width; x++) {
+    for (y = height; y < frame_height; y++) {
+      image_buffer[frame_width*y + x] = image_buffer[frame_width*(y - 1) + x];
+    }
+  }
+  for (x = 0; x < frame_width >> 1; x++) {
+    for (y = (height + 1) >> 1; y < frame_height >> 1; y++) {
+      image_buffer[frame_width*frame_height + (frame_width >> 1)*y + x] =
+       image_buffer[frame_width*frame_height + (frame_width >> 1)*(y - 1) + x];
+      image_buffer[frame_width*frame_height + (frame_width >> 1)*((frame_height >> 1) + y) + x] =
+       image_buffer[frame_width*frame_height + (frame_width >> 1)*((frame_height >> 1) + y - 1) + x];
+    }
+  }
+
   cinfo.err = jpeg_std_error(&jerr);
   jpeg_create_compress(&cinfo);
 
-  FILE *jpg_fd = fopen(jpg_path, "wb");
+  jpg_fd = fopen(jpg_path, "wb");
   if (!jpg_fd) {
     fprintf(stderr, "Invalid path to JPEG file!\n");
     return 1;
@@ -115,12 +185,13 @@ int main(int argc, char *argv[]) {
   cinfo.image_width = width;
   cinfo.image_height = height;
   cinfo.input_components = 3;
-  cinfo.in_color_space = JCS_YCbCr;
   jpeg_set_defaults(&cinfo);
 
   cinfo.raw_data_in = TRUE;
-  // The following is IJG-only.
-  // cinfo.do_fancy_downsampling = FALSE;
+#if JPEG_LIB_VERSION >= 70
+  cinfo.do_fancy_downsampling = FALSE;
+#endif
+  cinfo.in_color_space = JCS_YCbCr;
 
   cinfo.comp_info[0].h_samp_factor = 2;
   cinfo.comp_info[0].v_samp_factor = 2;
@@ -145,23 +216,19 @@ int main(int argc, char *argv[]) {
 
   jpeg_start_compress(&cinfo, TRUE);
 
-  JSAMPROW yrow_pointer[16];
-  JSAMPROW cbrow_pointer[8];
-  JSAMPROW crrow_pointer[8];
-  JSAMPROW *plane_pointer[3];
   plane_pointer[0] = yrow_pointer;
   plane_pointer[1] = cbrow_pointer;
   plane_pointer[2] = crrow_pointer;
+
   while (cinfo.next_scanline < cinfo.image_height) {
-    for (int y = 0; y < 16; y++) {
-      yrow_pointer[y] = image_buffer + cinfo.image_width * (cinfo.next_scanline + y);
+    for (y = 0; y < 16; y++) {
+      yrow_pointer[y] = image_buffer + frame_width * (cinfo.next_scanline + y);
     }
-    for (int y = 0; y < 8; y++) {
-      cbrow_pointer[y] = image_buffer + width * height +
-                         ((width + 1) >> 1) * ((cinfo.next_scanline >> 1) + y);
-      crrow_pointer[y] = image_buffer + width * height +
-                         ((width + 1) >> 1) * ((height + 1) >> 1) +
-                         ((width + 1) >> 1) * ((cinfo.next_scanline >> 1) + y);
+    for (y = 0; y < 8; y++) {
+      cbrow_pointer[y] = image_buffer + frame_width * frame_height +
+                         (frame_width >> 1) * ((cinfo.next_scanline >> 1) + y);
+      crrow_pointer[y] = image_buffer + frame_width * frame_height +
+                         (frame_width >> 1) * ((frame_height >> 1) + (cinfo.next_scanline >> 1) + y);
     }
     jpeg_write_raw_data(&cinfo, plane_pointer, 16);
   }
