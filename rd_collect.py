@@ -214,7 +214,7 @@ def get_results(png, format, quality):
   elif format == "hevc":
     png_yuv_target = png_yuv + ".hevc"
     png_yuv_target_yuv = png_yuv_target + ".yuv"
-    cmd = "%s -c %s -wdt %i -hgt %i -q %i -i %s -fr 50 -f 1 --SEIDecodedPictureHash 0 -b %s -o %s" % (chevc, hevc_config, width, height, quality, png_yuv, png_yuv_target, png_yuv_target_yuv)
+    cmd = "%s -c %s -wdt %i -hgt %i -q %i -i %s -fr 50 -f 1 --ConformanceMode=1 -b %s -o %s" % (chevc, hevc_config, width, height, quality, png_yuv, png_yuv_target, png_yuv_target_yuv)
     run_silent(cmd)
   elif format == "jpeg":
     png_yuv_target = png_yuv + ".jpg"
