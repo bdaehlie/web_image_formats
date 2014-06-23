@@ -48,8 +48,10 @@ int main(int argc, char *argv[]) {
   struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
   FILE *jpg_fd;
-  int width;
-  int height;
+  int luma_width;
+  int luma_height;
+  int chroma_width;
+  int chroma_height;
   int frame_width;
   int frame_height;
   int yuv_size;
@@ -94,46 +96,52 @@ int main(int argc, char *argv[]) {
 
   jpeg_start_decompress(&cinfo);
 
-  width = cinfo.output_width;
-  height = cinfo.output_height;
+  luma_width = cinfo.output_width;
+  luma_height = cinfo.output_height;
 
-  yuv_size = (width * height) + (((width + 1) >> 1) * ((height + 1) >> 1) << 1);
+  chroma_width = (luma_width + 1) >> 1;
+  chroma_height = (luma_height + 1) >> 1;
+
+  yuv_size = luma_width*luma_height + 2*chroma_width*chroma_height;
   yuv_buffer = malloc(yuv_size);
 
-  frame_width = (width + (16 - 1)) & ~(16 - 1);
-  frame_height = (height + (16 - 1)) & ~(16 -1);
+  frame_width = (cinfo.output_width + (16 - 1)) & ~(16 - 1);
+  frame_height = (cinfo.output_height + (16 - 1)) & ~(16 - 1);
 
-  image_buffer = malloc((frame_width + (frame_width >> 1)) << 4);
+  image_buffer = malloc(frame_width*16 + 2*(frame_width/2)*8);
 
   plane_pointer[0] = yrow_pointer;
   plane_pointer[1] = cbrow_pointer;
   plane_pointer[2] = crrow_pointer;
 
   for (y = 0; y < 16; y++) {
-    yrow_pointer[y] = image_buffer + frame_width*y;
+    yrow_pointer[y] = &image_buffer[frame_width*y];
   }
   for (y = 0; y < 8; y++) {
-    cbrow_pointer[y] = image_buffer + frame_width*16 + (frame_width>>1)*y;
-    crrow_pointer[y] = image_buffer + frame_width*16 + (frame_width>>1)*8 + (frame_width>>1)*y;
+    cbrow_pointer[y] = &image_buffer[frame_width*16 + (frame_width/2)*y];
+    crrow_pointer[y] = &image_buffer[frame_width*16 + (frame_width/2)*(8 + y)];
   }
 
   while (cinfo.output_scanline < cinfo.output_height) {
-    int scanline;
-    scanline = cinfo.output_scanline;
+    int luma_scanline;
+    int chroma_scanline;
+
+    luma_scanline = cinfo.output_scanline;
+    chroma_scanline = (luma_scanline + 1) >> 1;
 
     jpeg_read_raw_data(&cinfo, plane_pointer, 16);
 
-    for (y = 0; y < 16 && scanline + y < height; y++) {
-      for (x = 0; x < width; x++) {
-        yuv_buffer[width*(scanline + y) + x] = yrow_pointer[y][x];
+    for (y = 0; y < 16 && luma_scanline + y < luma_height; y++) {
+      for (x = 0; x < luma_width; x++) {
+        yuv_buffer[luma_width*(luma_scanline + y) + x] = yrow_pointer[y][x];
       }
     }
-    for (y = 0; y < 8 && (scanline >> 1) + y < (height + 1) >> 1; y++) {
-      for (x = 0; x < (width + 1) >> 1; x++) {
-        yuv_buffer[width*height + ((width + 1) >> 1)*((scanline >> 1) + y) +
-         x] = cbrow_pointer[y][x];
-        yuv_buffer[width*height + ((width + 1) >> 1)*(((height + 1) >> 1) +
-         ((scanline >> 1) + y)) + x] = crrow_pointer[y][x];
+    for (y = 0; y < 8 && chroma_scanline + y < chroma_height; y++) {
+      for (x = 0; x < chroma_width; x++) {
+        yuv_buffer[luma_width*luma_height +
+         chroma_width*(chroma_scanline + y) + x] = cbrow_pointer[y][x];
+        yuv_buffer[luma_width*luma_height + chroma_width*chroma_height +
+         chroma_width*(chroma_scanline + y) + x] = crrow_pointer[y][x];
       }
     }
   }
@@ -151,7 +159,7 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Invalid path to YUV file!");
     return 1;
   }
-  if (fwrite(yuv_buffer, yuv_size, 1, yuv_fd)!=1) {
+  if (fwrite(yuv_buffer, yuv_size, 1, yuv_fd) != 1) {
     fprintf(stderr, "Error writing yuv file\n");
   }
   fclose(yuv_fd);
