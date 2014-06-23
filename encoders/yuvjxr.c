@@ -25,9 +25,6 @@
 // POSSIBILITY OF SUCH DAMAGE.
 //
 //*@@@---@@@@******************************************************************
-
-/* gcc -I../../jxrlib/jxrtestlib -I../../jxrlib/common/include -I../../jxrlib/jxrgluelib -I../../jxrlib/image/sys -D__ANSI__ -o yuvjxr -L../../jxrlib -ljpegxr -ljxrglue yuvjxr.c */
-
 #define _CRT_SECURE_NO_WARNINGS
 #include <JXRTest.h>
 #include <errno.h>
@@ -128,9 +125,9 @@ main(int argc, char* argv[])
         fprintf(stderr, "Invalid image size input!\n");
         return 1;
     }
-    /* Right now we only support dimensions that are multiples of 16. */
-    if ((width % 16) != 0 || (height % 16) != 0) {
-        fprintf(stderr, "Image dimensions must be multiples of 16!\n");
+    /* Right now we only support dimensions that are multiples of 2. */
+    if ((width % 2) != 0 || (height % 2) != 0) {
+        fprintf(stderr, "Image dimensions must be multiples of 2!\n");
         return 1;
     }
 
