@@ -128,13 +128,13 @@ def quality_list_for_format(format):
     return possible_q
   if format == 'hevc':
     q = 37
-    while q >= 0.0:
+    while q >= 6.5:
       possible_q.append(q)
       q -= 0.5
     return possible_q
   if format == 'jxr':
     q = 25
-    while q < 100:
+    while q < 93:
       possible_q.append(q)
       q += 1
     return possible_q
