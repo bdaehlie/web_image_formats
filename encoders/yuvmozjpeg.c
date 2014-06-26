@@ -93,6 +93,7 @@ void extend_edge(JSAMPLE *image, int width, int height, unsigned char *yuv,
 
 int main(int argc, char *argv[]) {
   long quality;
+  const char *metric;
   const char *size;
   char *x;
   int luma_width;
@@ -116,9 +117,10 @@ int main(int argc, char *argv[]) {
   JSAMPROW *plane_pointer[3];
   int y;
 
-  if (argc != 5) {
+  if (argc != 6) {
     fprintf(stderr, "Required arguments:\n");
     fprintf(stderr, "1. JPEG quality value, 0-100\n");
+    fprintf(stderr, "2. Metric to tune for: psnr, hvspsnr, ssim, or msssim");
     fprintf(stderr, "2. Image size (e.g. '512x512')\n");
     fprintf(stderr, "3. Path to YUV input file\n");
     fprintf(stderr, "4. Path to JPG output file\n");
@@ -133,7 +135,9 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  size = argv[2];
+  metric = argv[2];
+
+  size = argv[3];
   x = strchr(size, 'x');
   if (!x && x != size && x != (x + strlen(x) - 1)) {
     fprintf(stderr, "Invalid image size input!\n");
@@ -158,8 +162,8 @@ int main(int argc, char *argv[]) {
   chroma_height = (luma_height + 1) >> 1;
 
   /* Will check these for validity when opening via 'fopen'. */
-  yuv_path = argv[3];
-  jpg_path = argv[4];
+  yuv_path = argv[4];
+  jpg_path = argv[5];
 
   yuv_fd = fopen(yuv_path, "r");
   if (!yuv_fd) {
@@ -234,6 +238,31 @@ int main(int argc, char *argv[]) {
   cinfo.comp_info[2].dc_tbl_no = 1;
   cinfo.comp_info[2].ac_tbl_no = 1;
   cinfo.comp_info[2].quant_tbl_no = 1;
+
+  if (strcmp("psnr", metric)) {
+    cinfo.use_flat_quant_tbl = TRUE;
+    cinfo.lambda_log_scale1 = 9.0;
+    cinfo.lambda_log_scale2 = 0.0;
+    cinfo.use_lambda_weight_tbl = FALSE;
+  } else if (strcmp("ssim", metric)) {
+    cinfo.use_flat_quant_tbl = TRUE;
+    cinfo.lambda_log_scale1 = 12.0;
+    cinfo.lambda_log_scale2 = 13.5;
+    cinfo.use_lambda_weight_tbl = FALSE;
+  } else if (strcmp("msssim", metric)) {
+    cinfo.use_flat_quant_tbl = TRUE;
+    cinfo.lambda_log_scale1 = 10.5;
+    cinfo.lambda_log_scale2 = 13.0;
+    cinfo.use_lambda_weight_tbl = TRUE;
+  } else if (strcmp("hvspsnr", metric)) {
+    cinfo.use_flat_quant_tbl = FALSE;
+    cinfo.lambda_log_scale1 = 16.0;
+    cinfo.lambda_log_scale2 = 15.5;
+    cinfo.use_lambda_weight_tbl = TRUE;
+  } else {
+    fprintf(stderr, "Bad metric choice!\n");
+    return 1;
+  }
 
   jpeg_set_quality(&cinfo, quality, TRUE);
   cinfo.optimize_coding = TRUE;
