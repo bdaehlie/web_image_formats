@@ -225,7 +225,7 @@ def get_results(png, format, quality):
     run_silent(cmd)
   elif format == "mozjpeg":
     png_yuv_target = png_yuv + ".jpg"
-    cmd = "%s %i %s %ix%i %s %s" % (yuvmozjpeg, quality, "hvspsnr", width, height, png_yuv, png_yuv_target)
+    cmd = "%s %i %s %ix%i %s %s" % (yuvmozjpeg, quality, "psnr", width, height, png_yuv, png_yuv_target)
     run_silent(cmd)
     png_yuv_target_yuv = png_yuv_target + ".yuv"
     cmd = "%s %s %s" % (jpegyuv, png_yuv_target, png_yuv_target_yuv)
