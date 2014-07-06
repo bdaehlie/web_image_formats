@@ -239,22 +239,22 @@ int main(int argc, char *argv[]) {
   cinfo.comp_info[2].ac_tbl_no = 1;
   cinfo.comp_info[2].quant_tbl_no = 1;
 
-  if (strcmp("psnr", metric)) {
+  if (strcmp("psnr", metric) == 0) {
     cinfo.use_flat_quant_tbl = TRUE;
     cinfo.lambda_log_scale1 = 9.0;
     cinfo.lambda_log_scale2 = 0.0;
     cinfo.use_lambda_weight_tbl = FALSE;
-  } else if (strcmp("ssim", metric)) {
+  } else if (strcmp("ssim", metric) == 0) {
     cinfo.use_flat_quant_tbl = TRUE;
     cinfo.lambda_log_scale1 = 12.0;
     cinfo.lambda_log_scale2 = 13.5;
     cinfo.use_lambda_weight_tbl = FALSE;
-  } else if (strcmp("msssim", metric)) {
+  } else if (strcmp("msssim", metric) == 0) {
     cinfo.use_flat_quant_tbl = TRUE;
     cinfo.lambda_log_scale1 = 10.5;
     cinfo.lambda_log_scale2 = 13.0;
     cinfo.use_lambda_weight_tbl = TRUE;
-  } else if (strcmp("hvspsnr", metric)) {
+  } else if (strcmp("hvspsnr", metric) == 0) {
     cinfo.use_flat_quant_tbl = FALSE;
     cinfo.lambda_log_scale1 = 16.0;
     cinfo.lambda_log_scale2 = 15.5;
