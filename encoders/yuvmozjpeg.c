@@ -120,10 +120,10 @@ int main(int argc, char *argv[]) {
   if (argc != 6) {
     fprintf(stderr, "Required arguments:\n");
     fprintf(stderr, "1. JPEG quality value, 0-100\n");
-    fprintf(stderr, "2. Metric to tune for: psnr, hvspsnr, ssim, or msssim");
-    fprintf(stderr, "2. Image size (e.g. '512x512')\n");
-    fprintf(stderr, "3. Path to YUV input file\n");
-    fprintf(stderr, "4. Path to JPG output file\n");
+    fprintf(stderr, "2. Metric to tune for: psnr, hvspsnr, ssim, or msssim\n");
+    fprintf(stderr, "3. Image size (e.g. '512x512')\n");
+    fprintf(stderr, "4. Path to YUV input file\n");
+    fprintf(stderr, "5. Path to JPG output file\n");
     return 1;
   }
 
