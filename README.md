@@ -67,4 +67,4 @@ This test suite is developed and tested on Linux (Fedora 20) and OS X (10.9). It
   * $ ./rd_average.py images/kodak/*.jpeg.out > jpeg.out
   * $ ./rd_average.py images/kodak/*.mozjpeg.out > mozjpeg.out
 5. Generate graphs
-  * $ ./rd_plot.py jpeg-vs-mozjpeg jpeg.out mozjpeg.out
+  * $ ./rd_plot.py Kodak jpeg.out mozjpeg.out
