@@ -38,7 +38,7 @@ This test suite is developed and tested on Linux (Fedora 20) and OS X (10.9). It
   * Tested with 1.3.1 release
   * Place directory called "libjpeg-turbo-1.3.1" alongside this test suite.
 * mozjpeg
-  * git clone git@github.com:mozilla/mozjpeg.git
+  * git clone https://github.com/mozilla/mozjpeg.git
   * Tested with latest git revision
   * Place directory called "mozjpeg" alongside this test suite.
 * HEVC-MSP Encoder/Decoder
