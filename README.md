@@ -12,10 +12,10 @@ This is a collection of software that can test the compression efficiency of var
 
 # Supported Quality Metrics
 
-* YSSIM (luma-only SSIM)
-* DSSIM (luma-only, based on SSIM)
-* RGB-SSIM (average of SSIM applied to R, G, and B channels)
 * PSNR-HVS-M (luma-only)
+* Y-SSIM (luma-only SSIM)
+* RGB-SSIM (average of SSIM applied to R, G, and B channels)
+* MS-SSIM (luma-only)
 
 # Supported Operating Systems
 
