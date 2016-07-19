@@ -1,3 +1,11 @@
+# UPDATE
+
+This repository has been superseded by the following repository:
+
+https://github.com/bdaehlie/lossy-compression-test
+
+The lossy-compression-test repository is essentially a fork of this, updated to work with newer versions of all the codec libraries and with further bug and usability fixes.
+
 # What Is This
 
 This is a collection of software that can test the compression efficiency of various lossy compressed image formats, according to various quality metrics. It can create graphs of the test data.
